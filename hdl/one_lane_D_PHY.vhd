@@ -31,6 +31,7 @@ constant LP_00 : std_logic_vector(1 downto 0) := "00"; --Control mode: Bridge
 constant LP_01 : std_logic_vector(1 downto 0) := "01"; --Control mode: HS-Rqst
 constant LP_10 : std_logic_vector(1 downto 0) := "10"; --Control mode: LP-Rqst
 constant LP_11 : std_logic_vector(1 downto 0) := "11"; --Control mode: Stop
+constant COUNTER_WIDTH : integer := 8; --max 256*10ns(100Mhz clock) = 2560ns delay
 
 type state_type is (CTRL_Stop,CTRL_Bridge,CTRL_HS_Rqst,CTRL_LP_Rqst,HS_Go,HS_Sync,HS_Burst);
 signal state_reg, state_next : state_type := CTRL_Stop;
@@ -38,8 +39,26 @@ signal lp_reg,lp_next :  STD_LOGIC_VECTOR(1 downto 0) := LP_11;
 signal hs_mode_flag_reg,hs_mode_flag_next : STD_LOGIC := '0'; --default LS mode
 signal hs_out_reg,hs_out_next : STD_LOGIC_VECTOR (DATA_WIDTH_OUT - 1 downto 0) := (others => '0');
 signal ready_to_transmit_reg,ready_to_transmit_next : STD_LOGIC := '0'; 
+signal reset_conter : STD_LOGIC := '0';
+signal counter_value :  STD_LOGIC_VECTOR (COUNTER_WIDTH - 1 downto 0) := (others => '0');
+--components
+component counter generic(n: natural :=COUNTER_WIDTH);
+port(clk :	in std_logic;
+	rst:	in std_logic;
+	counter_out :	out std_logic_vector(COUNTER_WIDTH-1 downto 0)
+);
+end component;
 
 begin
+
+--instantinte components
+delay_counter: counter 
+    generic map(n => COUNTER_WIDTH)
+    port map(clk => clk_100Mhz,
+             rst => reset_conter,
+             counter_out => counter_value);           
+
+--end of components instantinations
 
 lp_out <= lp_reg;
 hs_mode_flag <= hs_mode_flag_reg; -- to serializer

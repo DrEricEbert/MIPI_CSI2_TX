@@ -63,7 +63,7 @@ type state_type is (idle,framePreHeader,linePreHeader,dataGoesOut,
     signal data_out_reg,data_out_next : STD_LOGIC_VECTOR (PIXEL_WIDTH - 1 downto 0) := (others => '0');
     signal pixel_counter_reg,pixel_counter_next : STD_LOGIC_VECTOR (2**MAX_PIXELS_PER_LINE_WIDTH - 1 downto 0) := (others => '0');
     signal line_counter_reg,line_counter_next : STD_LOGIC_VECTOR (2**MAX_LINE_PER_FRAME_WIDTH - 1 downto 0) := (others => '0');
-
+    
 begin
 
 pixel_data <= data_out_reg;
