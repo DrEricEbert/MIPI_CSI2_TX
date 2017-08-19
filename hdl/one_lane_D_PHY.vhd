@@ -9,8 +9,7 @@ entity one_lane_D_PHY is generic (
 	DATA_WIDTH_IN : integer := 8;
 	DATA_WIDTH_OUT : integer := 8
 	);
-     Port(clk : in STD_LOGIC; --data in/out clock
-     clk_100Mhz : in STD_LOGIC; --for delays calculations
+     Port(clk : in STD_LOGIC; --data in/out clock LP clock, ~100 MHZ
      rst : in  STD_LOGIC;
      start_transmission : in STD_LOGIC;
      stop_transmission  : in STD_LOGIC;
@@ -61,7 +60,7 @@ begin
 --instantinte components
 delay_counter: counter 
     generic map(n => COUNTER_WIDTH)
-    port map(clk => clk_100Mhz,
+    port map(clk => clk,
              rst => reset_conter_reg,
              counter_out => counter_value);           
 
