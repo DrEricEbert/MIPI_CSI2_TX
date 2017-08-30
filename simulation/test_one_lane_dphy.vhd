@@ -80,7 +80,7 @@ signal hs_out :  STD_LOGIC_VECTOR (DATA_WIDTH_OUT - 1 downto 0);
 signal lp_out :  STD_LOGIC_VECTOR(1 downto 0); --bit 1 = Dp line, bit 0 = Dn line
 
 
-constant clk_period : time := 1 ns; --LP = 100 Mhz
+constant clk_period : time := 10 ns; --LP = 100 Mhz
 
 begin
 
