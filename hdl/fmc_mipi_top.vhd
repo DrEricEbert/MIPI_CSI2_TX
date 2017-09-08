@@ -37,70 +37,66 @@ entity fmc_mipi_top is
    sys_clk_n : in std_logic;
    rst : in std_logic;
       
-   FMC_Switch1_SEL1 : out std_logic;
-   FMC_Switch1_SEL2 : out std_logic;
-   FMC_Switch2_SEL1 : out std_logic;
-   FMC_Switch2_SEL2 : out std_logic;
+   FMC_Switch1_SEL1 : out std_logic; --H30 HPC_LA06_P
+   FMC_Switch1_SEL2 : out std_logic; --G30 HPC_LA06_N
+   FMC_Switch2_SEL1 : out std_logic; --F12 HPC_HA09_P
+   FMC_Switch2_SEL2 : out std_logic; --E13 HPC_HA09_N
    
-   FMC_I2C_CAM_CLK : inout std_logic;
-   FMC_I2C_CAM_DAT : inout std_logic;
+   FMC_I2C_CAM_CLK : inout std_logic; --F11 HPC_HA04_P
+   FMC_I2C_CAM_DAT : inout std_logic; --C12 HPC_HA03_P
    
-   FMC_I2C_GP0_CLK_1V8 : inout std_logic;
-   FMC_I2C_GP0_DAT_1V8 : inout std_logic;
+   FMC_I2C_GP0_CLK_1V8 : inout std_logic; --C11 HPC_HA02_N
+   FMC_I2C_GP0_DAT_1V8 : inout std_logic; --B14 HPC_HA07_P
      
-   FMC_TR_1DIR : out std_logic;
+   FMC_TR_1DIR : out std_logic; --E11 HPC_HA04_N
    
-   FMC_CAM_VSYNC  : in std_logic;
-   FMC_CAM_FLASH_EN  : in std_logic;   
+--BUG - no connection from FMC to FPGA in KC705;   FMC_CAM_VSYNC  : in std_logic;    -- HPC_HB16_P
+   FMC_CAM_FLASH_EN  : in std_logic; --C22 HPC_LA30_N
 
-   FMC_CAM0_MCLK : in std_logic;
-   FMC_CAM0_PWR  : in std_logic;
-   FMC_CAM0_RST  : in std_logic;
+--BUG - no connection from FMC to FPGA in KC705;   FMC_CAM0_MCLK : in std_logic; -- HPC_HB12_P
+   FMC_CAM0_PWR  : in std_logic; --C16 HPC_LA28_N
+   FMC_CAM0_RST  : in std_logic; --D22 HPC_LA30_P
 
-   FMC_CAM2_MCLK  : in std_logic;
-   FMC_CAM2_RST  : in std_logic;
-   FMC_CAM2_PWRD  : in std_logic;
+--BUG - no connection from FMC to FPGA in KC705;   FMC_CAM2_MCLK  : in std_logic; -- HPC_HB16_N
+--BUG - no connection from FMC to FPGA in KC705;   FMC_CAM2_PWRD  : in std_logic; -- HPC_HB20_P
+--BUG - no connection from FMC to FPGA in KC705;   FMC_CAM2_RST  : in std_logic;  -- HPC_HB20_N
    
    --******MIPI CSI LVDS based implemntation*******
    --Low Power lines - LP
-   LP_D3_P  : out std_logic := '0'; -- LA27_N
-   LP_D3_N  : out std_logic := '0'; -- LA27_P 
-   LP_D2_P  : out std_logic := '0'; -- FMC_LP_D2_P
-   LP_D2_N  : out std_logic := '0'; -- FMC_LP_D2_N
-   LP_D1_P  : out std_logic := '0'; -- LA23_P
-   LP_D1_N  : out std_logic := '0'; -- LA23_N
-   LP_D0_P  : out std_logic := '0'; -- LA14_P
-   LP_D0_N  : out std_logic := '0'; -- LA14_N
-   LP_CLK_P : out std_logic := '0'; -- FMC_LP_CLK_P may be need to change to input to enble HS free-run clock hack!!!
-   LP_CLK_N : out std_logic := '0'; -- FMC_LP_CLK_N may be need to change to input to enble HS free-run clock hack!!!
+   LP_D3_P  : out std_logic := '0'; --B19 HPC_LA27_N
+   LP_D3_N  : out std_logic := '0'; --C19 HPC_LA27_P 
+--BUG - no connection from FMC to FPGA in KC705;   LP_D2_P  : out std_logic := '0'; -- HPC_HB07_P FMC_LP_D2_P
+--BUG - no connection from FMC to FPGA in KC705;   LP_D2_N  : out std_logic := '0'; -- HPC_HB07_N HPC_FMC_LP_D2_N
+   LP_D1_P  : out std_logic := '0'; --B22 HPC_LA23_P
+   LP_D1_N  : out std_logic := '0'; --A22 HPC_LA23_N
+   LP_D0_P  : out std_logic := '0'; --B28 HPC_LA14_P
+   LP_D0_N  : out std_logic := '0'; --A28 HPC_LA14_N
+   LP_CLK_P : out std_logic := '0'; --J11 HPC_HA21_P FMC_LP_CLK_P may be need to change to input to enble HS free-run clock hack!!! PLL takes up to 1ms to lock
+   LP_CLK_N : out std_logic := '0'; --J12 HPC_HA21_N FMC_LP_CLK_N may be need to change to input to enble HS free-run clock hack!!! PLL takes up to 1ms to lock
    
    --High Speed lines - HS
-    HS_CLK_P : out std_logic := '0'; --LA00_CC_P
-    HS_CLK_N : out std_logic := '0'; --LA00_CC_N
-    HS_D0_P  : out std_logic := '0'; --FMC_LA02_P
-    HS_D0_N  : out std_logic := '0'; --FMC_LA02_N
-    HS_D1_P  : out std_logic := '0'; --FMC_LA03_P
-    HS_D1_N  : out std_logic := '0'; --FMC_LA03_N
-    HS_D2_P  : out std_logic := '0'; --FMC_LA04_P
-    HS_D2_N  : out std_logic := '0'; --FMC_LA04_N
-    HS_D3_P  : out std_logic := '0'; --FMC_LA08_P
-    HS_D3_N  : out std_logic := '0'; --FMC_LA08_N
+    HS_CLK_P : out std_logic := '0'; --C25 HPC_LA00_CC_P
+    HS_CLK_N : out std_logic := '0'; --B25 HPC_LA00_CC_N
+    HS_D0_P  : out std_logic := '0'; --H24 HPC_LA02_P
+    HS_D0_N  : out std_logic := '0'; --H25 HPC_LA02_N
+    HS_D1_P  : out std_logic := '0'; --H7  HPC_LA03_P
+    HS_D1_N  : out std_logic := '0'; --H8  HPC_LA03_N
+    HS_D2_P  : out std_logic := '0'; --G28 HPC_LA04_P
+    HS_D2_N  : out std_logic := '0'; --F28 HPC_LA04_N
+    HS_D3_P  : out std_logic := '0'; --E29 HPC_LA08_P
+    HS_D3_N  : out std_logic := '0'; --E30 HPC_LA08_N
 
    --******MIPI CSI MGT based implemntation*******   
     --Low Power lines - LP
-   LP2_CLK_P : out std_logic := '0'; --FMC_LP2_CLK_P
-   LP2_CLK_N : out std_logic := '0'; --FMC_LP2_CLK_N
-   LP2_D0_P  : out std_logic := '0'; --FMC_LP2_D0_P
-   LP2_D0_N  : out std_logic := '0'; --FMC_LP2_D0_N
-   LP2_D1_P  : out std_logic := '0'; --FMC_LP2_D1_P
-   LP2_D1_N  : out std_logic := '0'; --FMC_LP2_D1_N
-   LP2_D2_P  : out std_logic := '0'; --FMC_LP2_D2_P
-   LP2_D2_N  : out std_logic := '0'; --FMC_LP2_D2_N
-   
-   
-   
-   
-      
+   LP2_CLK_P : out std_logic := '0'; --B13 HPC_HA11_P FMC_LP2_CLK_P
+   LP2_CLK_N : out std_logic := '0'; --A13 HPC_HA11_N FMC_LP2_CLK_N
+   LP2_D0_P  : out std_logic := '0'; --C29 HPC_LA12_P FMC_LP2_D0_P
+   LP2_D0_N  : out std_logic := '0'; --B29 HPC_LA12_N FMC_LP2_D0_N
+   LP2_D1_P  : out std_logic := '0'; --J16 HPC_HA14_P FMC_LP2_D1_P
+   LP2_D1_N  : out std_logic := '0'; --H16 HPC_HA14_N FMC_LP2_D1_N
+   LP2_D2_P  : out std_logic := '0'; --F13 HPC_HA17_N_CC FMC_LP2_D2_P  !!! -> N <-> P switched why!!! -> this is LP, single ended,doesn't matter too much, but the naming is bad
+   LP2_D2_N  : out std_logic := '0'; --G13 HPC_HA17_P_CC FMC_LP2_D2_N   !!! -> N <-> P switched why!!! -> this is LP, single ended,doesn't matter too much, but the naming is bad
+                 
    leds_debug : out std_logic_vector(7 downto 0) := (others => '0');
    dummy : in std_logic
 
