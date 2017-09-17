@@ -37,8 +37,8 @@ entity fmc_mipi_top is
    sys_clk_n : in std_logic;  --AD11 SYSCLK_N
    rst : in std_logic; -- AB7 use CPU_RESET button
       
-   FMC_Switch1_SEL1 : out std_logic := '1'; --H30 HPC_LA06_P --put LVDS to LP mode  ( 1 = LP mode, 0 = HS mode)
-   FMC_Switch1_SEL2 : out std_logic := '1'; --G30 HPC_LA06_N --put LVDS to LP mode  ( 1 = LP mode, 0 = HS mode)
+   FMC_Switch1_SEL1 : out std_logic := '0'; --H30 HPC_LA06_P --put LVDS to HS mode  ( 1 = LP mode, 0 = HS mode)
+   FMC_Switch1_SEL2 : out std_logic := '0'; --G30 HPC_LA06_N --put LVDS to HS mode  ( 1 = LP mode, 0 = HS mode)
    FMC_Switch2_SEL1 : out std_logic := '1'; --F12 HPC_HA09_P --put CML to LP mode  ( 1 = LP mode, 0 = HS mode)
    FMC_Switch2_SEL2 : out std_logic := '1'; --E13 HPC_HA09_N --put CML to LP mode  ( 1 = LP mode, 0 = HS mode)
    
@@ -113,13 +113,23 @@ architecture Behavioral of fmc_mipi_top is
 signal clk_200Mhz,clk_10MHz,locked : std_logic;
 signal hs_clk,hs_d0,hs_d1,hs_d2,hs_d3 : std_logic;
 
+--test LVDS levels related
+signal  counter : integer; --5 clock cycles of 100 Mhz = 50 ns
+--end of test LVDS levels related
 begin
 
-hs_clk <= '1';
+--hs_clk <= '1';
 hs_d0 <= '1';
 hs_d1 <= '0';
-hs_d2 <= '1';
+--hs_d2 <= '1';
 hs_d3 <= '0';
+
+--test LVDS levels
+
+hs_clk <= '1' when counter > 200 else '0';
+--hs_clk <= clk_200Mhz; --push 200 Mhz
+hs_d2 <= '1' when counter > 2 else '0'; --with replaced resistors - 500 and 33 Ohm
+--end of test LVDS levels
 
 leds_debug(0) <= '1';
 leds_debug(1) <= '1';
@@ -129,15 +139,29 @@ leds_debug(4) <= '0';
 leds_debug(5) <= FMC_CAM_FLASH_EN;
 leds_debug(6) <= FMC_CAM0_RST;
 leds_debug(7) <= FMC_CAM0_PWR;
-   
- 
-  
-    
+       
 FMC_I2C_CAM_CLK <= 'Z';
 FMC_I2C_CAM_DAT <= 'Z';
    
 FMC_I2C_GP0_CLK_1V8 <= 'Z';
 FMC_I2C_GP0_DAT_1V8 <= 'Z';
+
+
+--FSMD state & data registers
+FSMD_state : process(clk_200Mhz,rst)
+begin
+        
+     if (rst = '1') then 
+			
+		elsif (clk_200Mhz'event and clk_200Mhz = '1') then 	
+		   counter <= counter +1;			
+		   if (counter = 400) then
+		   counter <= 0;
+		   end if; 
+		end if;
+						
+end process; --FSMD_state
+--end of test LVDS levels
 
 --instantinate differential pairs
 clck_in_IBUFDS: unisim.vcomponents.IBUFDS

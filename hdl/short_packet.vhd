@@ -18,7 +18,6 @@
 -- 
 ----------------------------------------------------------------------------------
 
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
@@ -38,8 +37,7 @@ entity short_packet is
           rst : in  STD_LOGIC;
           vc_num : in std_logic_vector(0 to 1); --virtual channel number          
           packet_type : in shortp_type;          --short packet type
-          frame_number : in  std_logic_vector(0 to 1); --frame number
-          line_number : in  std_logic_vector(0 to 1); --line number
+          packet_data : in std_logic_vector(0 to 15); --packet data: frame number for frame packet, line number for line packet
           short_packet_out : out std_logic_vector(0 to 31) --prepared short packet out
     );
 end short_packet;
@@ -51,9 +49,10 @@ constant Frame_End_Code : std_logic_vector(0 to 7)   := x"01";
 constant Line_Start_Code : std_logic_vector(0 to 7)  := x"02";
 constant Line_End_Code : std_logic_vector(0 to 7)    := x"03";
 
-signal byte_1_out : std_logic_vector(0 to 7);
-signal byte_2a3_out : std_logic_vector(0 to 15);
-signal byte_4_out : std_logic_vector(0 to 7);
+signal byte_1_out : std_logic_vector(0 to 7);  -- virtual channel number + short packet code
+signal byte_2a3_out : std_logic_vector(0 to 15); --payload
+signal byte_4_out : std_logic_vector(0 to 7); --ECC
+signal byte_123_tmp : std_logic_vector(0 to 23); 
 
 begin
 
@@ -63,5 +62,15 @@ byte_1_out(2 to 7) <= Frame_Start_Code(2 to 7) when packet_type = frame_start el
                       Line_Start_Code(2 to 7) when packet_type = line_start else
                       Line_End_Code(2 to 7) when packet_type = line_end else
                       (others => '0') ;
+byte_2a3_out(0 to 15) <= packet_data;		
+
+byte_123_tmp(0 to 7)   <= byte_1_out;
+byte_123_tmp(8 to 23)  <= byte_2a3_out;
+byte_4_out             <= get_ecc(byte_123_tmp(0 to 23));
+
+short_packet_out(0 to 23) <= byte_123_tmp;
+short_packet_out(24 to 31)<= byte_4_out;
+
+					  
 
 end Behavioral;

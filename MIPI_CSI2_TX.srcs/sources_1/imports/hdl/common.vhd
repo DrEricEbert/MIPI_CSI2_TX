@@ -43,6 +43,10 @@ package Common is
    (Data: std_logic_vector(0 to 7);
     crc:  std_logic_vector(0 to 15))
    return std_logic_vector;
+   
+ function get_ecc
+   (data : in std_logic_vector (23 downto 0))
+   return std_logic_vector;
   
 end Common;
 
@@ -80,5 +84,24 @@ begin
   newcrc(15) := d(7) xor d(3) xor c(7) xor c(11) xor c(15);
   return newcrc;
 end nextCRC16_D8;
+
+function get_ecc
+    (data : in std_logic_vector (23 downto 0))
+    return std_logic_vector is
+
+variable ecc_out: std_logic_vector(7 downto 0);
+
+begin
+    ecc_out(7) := '0';
+    ecc_out(6) := '0';
+    ecc_out(5) := data(10) xor data(11) xor data(12) xor data(13) xor data(14) xor data(15) xor data(16) xor data(17) xor data(18) xor data(19) xor data(21) xor data(22) xor data(23);
+    ecc_out(4) := data(4) xor data(5) xor data(6) xor data(7) xor data(8) xor data(9) xor data(16) xor data(17) xor data(18) xor data(19) xor data(20) xor data(22) xor data(23);
+    ecc_out(3) := data(1) xor data(2) xor data(3) xor data(7) xor data(8) xor data(9) xor data(13) xor data(14) xor data(15) xor data(19) xor data(20) xor data(21) xor data(23);
+    ecc_out(2) := data(0) xor data(2) xor data(3) xor data(5) xor data(6) xor data(9) xor data(11) xor data(12) xor data(15) xor data(18) xor data(20) xor data(21) xor data(22);
+    ecc_out(1) := data(0) xor data(1) xor data(3) xor data(4) xor data(6) xor data(8) xor data(10) xor data(12) xor data(14) xor data(17) xor data(20) xor data(21) xor data(22) xor data(23);
+    ecc_out(0) := data(0) xor data(1) xor data(2) xor data(4) xor data(5) xor data(7) xor data(10) xor data(11) xor data(13) xor data(16) xor data(20) xor data(21) xor data(22) xor data(23);
+	
+	return ecc_out;
+end get_ecc;
    
 end Common;
