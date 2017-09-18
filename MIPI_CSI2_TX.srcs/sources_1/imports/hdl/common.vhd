@@ -47,10 +47,71 @@ package Common is
  function get_ecc
    (data : in std_logic_vector (23 downto 0))
    return std_logic_vector;
+ 
+ function get_short_packet
+   (vc_num : in std_logic_vector(0 to 1); --virtual channel number          
+    packet_type : in shortp_type;          --short packet type
+    packet_data : in std_logic_vector(0 to 15)) --packet data: frame number for frame packet, line number for line packet
+    return std_logic_vector(0 to 31); --prepared short packet out
   
 end Common;
 
 package body Common is
+
+	function get_short_packet
+	   (vc_num : in std_logic_vector(0 to 1); --virtual channel number          
+		packet_type : in shortp_type;          --short packet type
+		packet_data : in std_logic_vector(0 to 15)) --packet data: frame number for frame packet, line number for line packet
+		return std_logic_vector(0 to 31) is --prepared short packet out is
+
+		constant Frame_Start_Code : std_logic_vector(0 to 7) := x"00";
+		constant Frame_End_Code : std_logic_vector(0 to 7)   := x"01";
+		constant Line_Start_Code : std_logic_vector(0 to 7)  := x"02";
+		constant Line_End_Code : std_logic_vector(0 to 7)    := x"03";
+		constant Default_Packet_Code : std_logic_vector(0 to 7)    := x"04"; --using reserved value
+
+		variable byte_1_out : std_logic_vector(0 to 7);  -- virtual channel number + short packet code
+		variable byte_2a3_out : std_logic_vector(0 to 15); --payload
+		variable byte_4_out : std_logic_vector(0 to 7); --ECC
+		variable byte_123_tmp : std_logic_vector(0 to 23); 
+		variable short_packet_out : std_logic_vector(0 to 31); --return value = constructed short packet
+		
+		begin
+
+			byte_1_out(0 to 1) := vc_num;
+			-- byte_1_out(2 to 7) := Frame_Start_Code(2 to 7) when packet_type = frame_start else
+								  -- Frame_End_Code(2 to 7) when packet_type = frame_end else
+								  -- Line_Start_Code(2 to 7) when packet_type = line_start else
+								  -- Line_End_Code(2 to 7) when packet_type = line_end else
+								  -- (others => '0') ;
+								  
+			case packet_type is 
+				when frame_start =>
+				    byte_1_out(2 to 7) := Frame_Start_Code(2 to 7);
+				when frame_end =>
+                    byte_1_out(2 to 7) := Frame_End_Code(2 to 7);
+				when line_start =>  
+                    byte_1_out(2 to 7) := Line_Start_Code(2 to 7);
+				when line_end => 
+                    byte_1_out(2 to 7) := Line_End_Code(2 to 7);		
+				when others  =>   
+				    byte_1_out(2 to 7) := Line_End_Code(2 to 7);	
+             
+            end case; --state_reg					  
+								  
+								  
+			byte_2a3_out(0 to 15) := packet_data;		
+
+			byte_123_tmp(0 to 7)   := byte_1_out;
+			byte_123_tmp(8 to 23)  := byte_2a3_out;
+			byte_4_out             := get_ecc(byte_123_tmp(0 to 23));
+
+			short_packet_out(0 to 23) := byte_123_tmp;
+			short_packet_out(24 to 31):= byte_4_out;
+
+							  
+		return short_packet_out;
+	end get_short_packet;
    
    
   function nextCRC16_D8

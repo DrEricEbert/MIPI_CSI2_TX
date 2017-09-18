@@ -42,6 +42,7 @@ entity short_packet is
     );
 end short_packet;
 
+
 architecture Behavioral of short_packet is
 
 constant Frame_Start_Code : std_logic_vector(0 to 7) := x"00";
