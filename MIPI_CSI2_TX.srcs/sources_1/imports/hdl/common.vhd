@@ -52,7 +52,7 @@ package Common is
    (vc_num : in std_logic_vector(0 to 1); --virtual channel number          
     packet_type : in shortp_type;          --short packet type
     packet_data : in std_logic_vector(0 to 15)) --packet data: frame number for frame packet, line number for line packet
-    return std_logic_vector(0 to 31); --prepared short packet out
+    return std_logic_vector; --prepared short packet out
   
 end Common;
 
@@ -62,7 +62,7 @@ package body Common is
 	   (vc_num : in std_logic_vector(0 to 1); --virtual channel number          
 		packet_type : in shortp_type;          --short packet type
 		packet_data : in std_logic_vector(0 to 15)) --packet data: frame number for frame packet, line number for line packet
-		return std_logic_vector(0 to 31) is --prepared short packet out is
+		return std_logic_vector is --prepared short packet out is
 
 		constant Frame_Start_Code : std_logic_vector(0 to 7) := x"00";
 		constant Frame_End_Code : std_logic_vector(0 to 7)   := x"01";
