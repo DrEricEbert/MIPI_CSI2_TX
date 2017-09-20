@@ -49,9 +49,9 @@ package Common is
    return std_logic_vector;
  
  function get_short_packet
-   (vc_num : in std_logic_vector(0 to 1); --virtual channel number          
+   (vc_num : in std_logic_vector(1 downto 0); --virtual channel number          
     packet_type : in shortp_type;          --short packet type
-    packet_data : in std_logic_vector(0 to 15)) --packet data: frame number for frame packet, line number for line packet
+    packet_data : in std_logic_vector(15 downto 0)) --packet data: frame number for frame packet, line number for line packet
     return std_logic_vector; --prepared short packet out
   
 end Common;
@@ -59,26 +59,26 @@ end Common;
 package body Common is
 
 	function get_short_packet
-	   (vc_num : in std_logic_vector(0 to 1); --virtual channel number          
+	   (vc_num : in std_logic_vector(1 downto 0); --virtual channel number          
 		packet_type : in shortp_type;          --short packet type
-		packet_data : in std_logic_vector(0 to 15)) --packet data: frame number for frame packet, line number for line packet
+		packet_data : in std_logic_vector(15 downto 0)) --packet data: frame number for frame packet, line number for line packet
 		return std_logic_vector is --prepared short packet out is
 
-		constant Frame_Start_Code : std_logic_vector(0 to 7) := x"00";
-		constant Frame_End_Code : std_logic_vector(0 to 7)   := x"01";
-		constant Line_Start_Code : std_logic_vector(0 to 7)  := x"02";
-		constant Line_End_Code : std_logic_vector(0 to 7)    := x"03";
-		constant Default_Packet_Code : std_logic_vector(0 to 7)    := x"04"; --using reserved value
+		constant Frame_Start_Code : std_logic_vector(7 downto 0) := x"00";
+		constant Frame_End_Code : std_logic_vector(7 downto 0)   := x"01";
+		constant Line_Start_Code : std_logic_vector(7 downto 0)  := x"02";
+		constant Line_End_Code : std_logic_vector(7 downto 0)    := x"03";
+		constant Default_Packet_Code : std_logic_vector(7 downto 0)    := x"04"; --using reserved value
 
-		variable byte_1_out : std_logic_vector(0 to 7);  -- virtual channel number + short packet code
-		variable byte_2a3_out : std_logic_vector(0 to 15); --payload
-		variable byte_4_out : std_logic_vector(0 to 7); --ECC
-		variable byte_123_tmp : std_logic_vector(0 to 23); 
-		variable short_packet_out : std_logic_vector(0 to 31); --return value = constructed short packet
+		variable byte_1_out : std_logic_vector(7 downto 0);  -- virtual channel number + short packet code
+		variable byte_2a3_out : std_logic_vector(15 downto 0); --payload
+		variable byte_4_out : std_logic_vector(7 downto 0); --ECC
+		variable byte_123_tmp : std_logic_vector(23 downto 0); 
+		variable short_packet_out : std_logic_vector(31 downto 0); --return value = constructed short packet
 		
 		begin
 
-			byte_1_out(0 to 1) := vc_num;
+			byte_1_out(7 downto 6) := vc_num;
 			-- byte_1_out(2 to 7) := Frame_Start_Code(2 to 7) when packet_type = frame_start else
 								  -- Frame_End_Code(2 to 7) when packet_type = frame_end else
 								  -- Line_Start_Code(2 to 7) when packet_type = line_start else
@@ -87,27 +87,32 @@ package body Common is
 								  
 			case packet_type is 
 				when frame_start =>
-				    byte_1_out(2 to 7) := Frame_Start_Code(2 to 7);
+				    byte_1_out(5 downto 0) := Frame_Start_Code(5 downto 0);
 				when frame_end =>
-                    byte_1_out(2 to 7) := Frame_End_Code(2 to 7);
+                    byte_1_out(5 downto 0) := Frame_End_Code(5 downto 0);
 				when line_start =>  
-                    byte_1_out(2 to 7) := Line_Start_Code(2 to 7);
+                    byte_1_out(5 downto 0) := Line_Start_Code(5 downto 0);
 				when line_end => 
-                    byte_1_out(2 to 7) := Line_End_Code(2 to 7);		
+                    byte_1_out(5 downto 0) := Line_End_Code(5 downto 0);		
 				when others  =>   
-				    byte_1_out(2 to 7) := Line_End_Code(2 to 7);	
+				    byte_1_out(5 downto 0) := Line_End_Code(5 downto 0);	
              
             end case; --state_reg					  
 								  
 								  
-			byte_2a3_out(0 to 15) := packet_data;		
+			byte_2a3_out(15 downto 0) := packet_data;		
 
-			byte_123_tmp(0 to 7)   := byte_1_out;
-			byte_123_tmp(8 to 23)  := byte_2a3_out;
-			byte_4_out             := get_ecc(byte_123_tmp(0 to 23));
+			byte_123_tmp(7 downto 0)   := byte_1_out;
+			byte_123_tmp(23 downto 8)  := byte_2a3_out;
+			byte_4_out             := get_ecc(byte_123_tmp(23 downto 0));
 
-			short_packet_out(0 to 23) := byte_123_tmp;
-			short_packet_out(24 to 31):= byte_4_out;
+			--short_packet_out(23 downto 0) := byte_1_out;
+			--short_packet_out(31 downto 24):= byte_4_out;
+
+			short_packet_out(7 downto 0)   := byte_1_out;
+			short_packet_out(23 downto 8)  := byte_2a3_out;
+			short_packet_out(31 downto 24) := byte_4_out;
+			
 
 							  
 		return short_packet_out;
