@@ -30,8 +30,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
-library UNISIM;
-use UNISIM.VComponents.all;
+--library UNISIM;
+--use UNISIM.VComponents.all;
 
 entity video_source is generic (	
 	VIDEO_WIDTH : integer := 32;  -- actual width of the video QVGA = 320
