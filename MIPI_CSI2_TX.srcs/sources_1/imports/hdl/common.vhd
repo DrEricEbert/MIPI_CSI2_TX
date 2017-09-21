@@ -34,7 +34,13 @@ use IEEE.STD_LOGIC_1164.ALL;
 package Common is   
 
    type my_enum_type is (r1, r2, r3);
-   type shortp_type is (frame_start,frame_end,line_start,line_end); --short packet type
+   type packet_type_t is (Frame_Start,Frame_End,Line_Start,Line_End,    --short packet 
+						   --YUV
+						   YUV420_8_bit,YUV420_10_bit,Legacy_YUV420_8_bit,YUV422_8_bit,YUV422_10_bit,
+						   --RGB
+						   RGB444,RGB555,RGB565,RGB666,RGB888,  --the only used in bring-up phase is RGB888
+						   --RAW
+						   RAW6,RAW7,RAW8,RAW10,RAW12,RAW14); --packet types
 
      -- polynomial: x^16 + x^12 + x^5 + 1
  -- data width: 8
@@ -50,7 +56,7 @@ package Common is
  
  function get_short_packet
    (vc_num : in std_logic_vector(1 downto 0); --virtual channel number          
-    packet_type : in shortp_type;          --short packet type
+    packet_type : in packet_type_t;          --short packet type
     packet_data : in std_logic_vector(15 downto 0)) --packet data: frame number for frame packet, line number for line packet
     return std_logic_vector; --prepared short packet out
   
@@ -60,16 +66,42 @@ package body Common is
 
 	function get_short_packet
 	   (vc_num : in std_logic_vector(1 downto 0); --virtual channel number          
-		packet_type : in shortp_type;          --short packet type
+		packet_type : in packet_type_t;          --short packet type
 		packet_data : in std_logic_vector(15 downto 0)) --packet data: frame number for frame packet, line number for line packet
 		return std_logic_vector is --prepared short packet out is
 
+		
+		--******************short packet**********
 		constant Frame_Start_Code : std_logic_vector(7 downto 0) := x"00";
 		constant Frame_End_Code : std_logic_vector(7 downto 0)   := x"01";
 		constant Line_Start_Code : std_logic_vector(7 downto 0)  := x"02";
 		constant Line_End_Code : std_logic_vector(7 downto 0)    := x"03";
 		constant Default_Packet_Code : std_logic_vector(7 downto 0)    := x"04"; --using reserved value
+		
+		--*****************long packet**************
+		--YUV
+		 constant YUV420_8_bit_Code        : std_logic_vector(7 downto 0) := x"18";
+         constant YUV420_10_bit_Code       : std_logic_vector(7 downto 0) := x"19";
+         constant Legacy_YUV420_8_bit_Code : std_logic_vector(7 downto 0) := x"1A";
+         constant YUV422_8_bit_Code        : std_logic_vector(7 downto 0) := x"1E";
+         constant YUV422_10_bit_Code       : std_logic_vector(7 downto 0) := x"1F";
+		--RGB
+		 constant RGB444_Code : std_logic_vector(7 downto 0) := x"20";
+		 constant RGB555_Code : std_logic_vector(7 downto 0) := x"21";
+		 constant RGB565_Code : std_logic_vector(7 downto 0) := x"22";
+		 constant RGB666_Code : std_logic_vector(7 downto 0) := x"23";
+		 constant RGB888_Code : std_logic_vector(7 downto 0) := x"24";  --the only one, used in bring-up phase
+		--RAW
+		 constant RAW6_Code  : std_logic_vector(7 downto 0) := x"28";
+		 constant RAW7_Code  : std_logic_vector(7 downto 0) := x"29";
+		 constant RAW8_Code  : std_logic_vector(7 downto 0) := x"2A";
+		 constant RAW10_Code : std_logic_vector(7 downto 0) := x"2B";
+		 constant RAW12_Code : std_logic_vector(7 downto 0) := x"2C";
+		 constant RAW14_Code : std_logic_vector(7 downto 0) := x"2D";
 
+		
+		
+		
 		variable byte_1_out : std_logic_vector(7 downto 0);  -- virtual channel number + short packet code
 		variable byte_2a3_out : std_logic_vector(15 downto 0); --payload
 		variable byte_4_out : std_logic_vector(7 downto 0); --ECC
@@ -79,35 +111,69 @@ package body Common is
 		begin
 
 			byte_1_out(7 downto 6) := vc_num;
-			-- byte_1_out(2 to 7) := Frame_Start_Code(2 to 7) when packet_type = frame_start else
-								  -- Frame_End_Code(2 to 7) when packet_type = frame_end else
-								  -- Line_Start_Code(2 to 7) when packet_type = line_start else
-								  -- Line_End_Code(2 to 7) when packet_type = line_end else
+			-- byte_1_out(2 to 7) := Frame_Start_Code(2 to 7) when packet_type = Frame_Start else
+								  -- Frame_End_Code(2 to 7) when packet_type = Frame_End else
+								  -- Line_Start_Code(2 to 7) when packet_type = Line_Start else
+								  -- Line_End_Code(2 to 7) when packet_type = Line_End else
 								  -- (others => '0') ;
 								  
 			case packet_type is 
-				when frame_start =>
+			    --short packet 
+				when Frame_Start =>
 				    byte_1_out(5 downto 0) := Frame_Start_Code(5 downto 0);
-				when frame_end =>
+				when Frame_End =>
                     byte_1_out(5 downto 0) := Frame_End_Code(5 downto 0);
-				when line_start =>  
+				when Line_Start =>  
                     byte_1_out(5 downto 0) := Line_Start_Code(5 downto 0);
-				when line_end => 
+				when Line_End => 
                     byte_1_out(5 downto 0) := Line_End_Code(5 downto 0);		
+			--YUV
+				when YUV420_8_bit =>
+					byte_1_out(5 downto 0) := YUV420_8_bit_Code(5 downto 0);
+				when YUV420_10_bit  =>   
+					byte_1_out(5 downto 0) := YUV420_10_bit_Code(5 downto 0);
+				when Legacy_YUV420_8_bit   =>
+					byte_1_out(5 downto 0) := Legacy_YUV420_8_bit_Code(5 downto 0);
+				when YUV422_8_bit    =>
+					byte_1_out(5 downto 0) := YUV422_8_bit_Code(5 downto 0);
+				when YUV422_10_bit   =>
+					byte_1_out(5 downto 0) := YUV422_10_bit_Code(5 downto 0);
+			--RGB
+				when RGB444   =>
+					byte_1_out(5 downto 0) := RGB444_Code(5 downto 0);
+				when RGB555   =>
+					byte_1_out(5 downto 0) := RGB555_Code(5 downto 0);
+				when RGB565   =>
+					byte_1_out(5 downto 0) := RGB565_Code(5 downto 0);
+				when RGB666   =>
+					byte_1_out(5 downto 0) := RGB666_Code(5 downto 0);
+				when RGB888   =>
+					byte_1_out(5 downto 0) := RGB888_Code(5 downto 0); --the only used in bring-up phase is RGB888
+			--RAW
+				when RAW6     =>
+					byte_1_out(5 downto 0) := RAW6_Code(5 downto 0);
+				when RAW7     =>
+					byte_1_out(5 downto 0) := RAW7_Code(5 downto 0);
+				when RAW8     =>
+					byte_1_out(5 downto 0) := RAW8_Code(5 downto 0);
+				when RAW10    =>
+					byte_1_out(5 downto 0) := RAW10_Code(5 downto 0);
+				when RAW12    =>
+					byte_1_out(5 downto 0) := RAW12_Code(5 downto 0);
+				when RAW14    =>
+					byte_1_out(5 downto 0) := RAW14_Code(5 downto 0);					
+			--default
 				when others  =>   
-				    byte_1_out(5 downto 0) := Line_End_Code(5 downto 0);	
+				    byte_1_out(5 downto 0) := Line_End_Code(5 downto 0);	--default case
              
-            end case; --state_reg					  
+            end case; --packet_type
 								  
 								  
 			byte_2a3_out(15 downto 0) := packet_data;		
 
 			byte_123_tmp(7 downto 0)   := byte_1_out;
 			byte_123_tmp(23 downto 8)  := byte_2a3_out;
-			byte_4_out             := get_ecc(byte_123_tmp(23 downto 0));
-
-			--short_packet_out(23 downto 0) := byte_1_out;
-			--short_packet_out(31 downto 24):= byte_4_out;
+			byte_4_out                 := get_ecc(byte_123_tmp(23 downto 0));
 
 			short_packet_out(7 downto 0)   := byte_1_out;
 			short_packet_out(23 downto 8)  := byte_2a3_out;
