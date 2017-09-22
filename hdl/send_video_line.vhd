@@ -148,12 +148,12 @@ begin
 			word_count_next <= std_logic_vector( unsigned(word_count_reg) + 1 ); --reduces 100 MHz speed on Artix 7
 			
 			if (word_count_reg = word_cound) then --finish of transmission
-			   data_out_next <= crc_reg(8 to 15);  --send out first byte of CRC
+			   data_out_next <= crc_reg(8 to 15);  --send out first byte of CRC (LSB)
 				state_next <= second_byte_of_crc;   
 			end if;					
 			
 		when second_byte_of_crc =>	
-			   data_out_next <= crc_reg(0 to 7);  --send out second byte of CRC
+			   data_out_next <= crc_reg(0 to 7);  --send out second byte of CRC (MSB)
 				state_next <= idle;   
 		
                
