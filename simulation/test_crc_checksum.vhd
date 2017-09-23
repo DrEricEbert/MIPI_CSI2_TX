@@ -56,7 +56,7 @@ signal crc_arr1 : arr_of_crc := (x"FF",x"00",x"00",x"02",x"B9",x"DC",x"F3",x"72"
 								 
 signal crc_arr2 : arr_of_crc := (x"FF",x"00",x"00",x"00",x"1E",x"F0",x"1E",x"C7",
                                  x"4F",x"82",x"78",x"C5",x"82",x"E0",x"8C",x"70",
-								 x"D2",x"3C",x"78",x"E9",x"FF",x"00",x"00",x"01");
+								         x"D2",x"3C",x"78",x"E9",x"FF",x"00",x"00",x"01");
 
 begin
 
