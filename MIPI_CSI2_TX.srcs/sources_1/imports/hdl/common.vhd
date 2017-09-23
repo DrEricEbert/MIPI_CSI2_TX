@@ -46,8 +46,8 @@ package Common is
  -- data width: 8
  -- convention: the first serial bit is D[7]
  function nextCRC16_D8
-   (Data: std_logic_vector(0 to 7);
-    crc:  std_logic_vector(0 to 15))
+   (Data: std_logic_vector(7 downto 0);
+    crc:  std_logic_vector(15 downto 0))
    return std_logic_vector;
    
  function get_ecc
@@ -186,8 +186,8 @@ package body Common is
    
    
   function nextCRC16_D8
-  (Data: std_logic_vector(0 to 7);
-   crc:  std_logic_vector(0 to 15))
+  (Data: std_logic_vector(7 downto 0);
+   crc:  std_logic_vector(15 downto 0))
   return std_logic_vector is
 
   variable d:      std_logic_vector(0 to 7);
