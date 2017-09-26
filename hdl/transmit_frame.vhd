@@ -10,9 +10,24 @@ use work.Common.all;
 
 entity transmit_frame is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
+     clk_lp : in std_logic; --LP clock, ~100 MHZ. not necessarily the same as clk HS
      rst : in  std_logic;
-     bytes_per_line : in std_logic_vector(15 downto 0); --bytes per video line
-     lines_per_frame : in std_logic_vector(15 downto 0); --bytes per video line     
+     bytes_per_line : in std_logic_vector(15 downto 0); --bytes per video line (take into account virtual channels data reduction)
+     lines_per_frame : in std_logic_vector(15 downto 0); --lines per video frame (take into account virtual channels data reduction? should I?)
+     vc_num : in std_logic_vector(1 downto 0); --virtual channel number  
+ 	  data_type : in packet_type_t; --data type - YUV,RGB,RAW etc    
+ 	  frame_data_in : in std_logic_vector(7 downto 0); --one byte of video payload   
+     start_frame_transmission : in std_logic; --triggers LP dance
+     stop_frame_transmission :  in std_logic; --aborts the frame transmission (not sure that this one is neccesary)
+
+     hs_data_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
+     lp_data_out : out std_logic_vector(1 downto 0) --bit 1 = Dp line, bit 0 = Dn line
+     ready_to_send_data : out std_logic; --goes high once ready to accept the HS data (goes 1, X clock cicles before the actual
+                                         --reading, to give a time for producer to prepare)
+     hs_data_valid : out std_logic; --1 when hs_data_out is valid
+     lp_data_valid : out std_logic; --1 when lp_data_out is valid
+     is_hs_mode :  out std_logic; --0 when  in LP mode, 1 when in HS mode
+     
 	 );
 end transmit_frame;
 
@@ -40,14 +55,12 @@ COMPONENT one_lane_D_PHY is generic (
 	);
      Port(clk : in STD_LOGIC; --LP data in/out clock     
      rst : in  STD_LOGIC;
-     start_transmission : in STD_LOGIC;
-     stop_transmission  : in STD_LOGIC;
-     data_in :  in STD_LOGIC_VECTOR (DATA_WIDTH_IN - 1 downto 0);
-     
+     start_transmission : in STD_LOGIC; --start of transmit trigger - performs the required LP dance
+     stop_transmission  : in STD_LOGIC; --end of transmit trigger, enters into LP CTRL_Stop mode
      ready_to_transmit : out STD_LOGIC; --goes high once ready for transmission
-     hs_mode_flag : out STD_LOGIC; --goes high when entering HS mode
-     output_valid : out STD_LOGIC;-- indicates that the output is valid
-     hs_out : out STD_LOGIC_VECTOR (DATA_WIDTH_OUT - 1 downto 0);
+     hs_mode_flag : out STD_LOGIC; --signaling to enter/exit the HS mode. 1- enter, 0- exit. Good for flag of turning on the clock or
+                                   -- as a trigger for muxer/switcher. This one goes high configurable number of clock cycles before
+                                   -- ready_to_transmit goes high.
      lp_out : out STD_LOGIC_VECTOR(1 downto 0) --bit 1 = Dp line, bit 0 = Dn line
      --err_occured : out STD_LOGIC  --active highl 0 = no error, 1 - error acured
      );
