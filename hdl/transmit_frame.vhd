@@ -6,6 +6,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 use work.Common.all;
 
+-- hs_out_next <= "00011101";  --output sync sequence '00011101'
+
 entity transmit_frame is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      rst : in  std_logic;

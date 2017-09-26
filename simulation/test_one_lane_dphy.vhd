@@ -53,14 +53,10 @@ COMPONENT one_lane_D_PHY is generic (
 	);
      Port(clk : in STD_LOGIC; --LP data in/out clock     
      rst : in  STD_LOGIC;
-     start_transmission : in STD_LOGIC;
-     stop_transmission  : in STD_LOGIC;
-     data_in :  in STD_LOGIC_VECTOR (DATA_WIDTH_IN - 1 downto 0);
-     
+     start_transmission : in STD_LOGIC; --start of transmit trigger - performs the required LP dance
+     stop_transmission  : in STD_LOGIC; --end of transmit trigger, enters into LP CTRL_Stop mode   
      ready_to_transmit : out STD_LOGIC; --goes high once ready for transmission
-     hs_mode_flag : out STD_LOGIC; --goes high when entering HS mode
-     output_valid : out STD_LOGIC;-- indicates that the output is valid
-     hs_out : out STD_LOGIC_VECTOR (DATA_WIDTH_OUT - 1 downto 0);
+     hs_mode_flag : out STD_LOGIC; --signaling to enter/exit the HS mode. 1- enter, 0- exit
      lp_out : out STD_LOGIC_VECTOR(1 downto 0) --bit 1 = Dp line, bit 0 = Dn line
      --err_occured : out STD_LOGIC  --active highl 0 = no error, 1 - error acured
      );
@@ -71,12 +67,9 @@ signal clk : std_logic;
 signal rst : std_logic;
 signal start_transmission :  STD_LOGIC := '0';
 signal stop_transmission  :  STD_LOGIC := '0';
-signal data_in :   STD_LOGIC_VECTOR (DATA_WIDTH_IN - 1 downto 0);
 --Outputs
 signal ready_to_transmit :  STD_LOGIC; --goes high once ready for transmission
 signal hs_mode_flag :  STD_LOGIC; --goes high when entering HS mode
-signal output_valid :  STD_LOGIC;-- indicates that the output is valid
-signal hs_out :  STD_LOGIC_VECTOR (DATA_WIDTH_OUT - 1 downto 0);
 signal lp_out :  STD_LOGIC_VECTOR(1 downto 0); --bit 1 = Dp line, bit 0 = Dn line
 
 
@@ -90,11 +83,8 @@ uut: one_lane_D_PHY PORT MAP(
      rst => rst,
      start_transmission => start_transmission,
      stop_transmission => stop_transmission,
-     data_in  => data_in,
      ready_to_transmit => ready_to_transmit,
      hs_mode_flag  => hs_mode_flag,
-     output_valid  => output_valid,
-     hs_out  => hs_out,
      lp_out => lp_out
      );
         
@@ -118,6 +108,9 @@ begin
    rst <= '1';
    wait for clk_period*5;    
    rst <= '0';
+   
+	--wait a little
+   wait for clk_period*20;
  
    --toggle start of transmission
    start_transmission <= '1';
@@ -127,16 +120,17 @@ begin
    
    --wait until ready for transmission
    wait until ready_to_transmit = '1';
-   wait for clk_period;
    
-   --transmit first byte
-   data_in <= "11111111";
+   --dummy transmit
+   wait for clk_period*20;
+   
+   --toggle end of transmission
+   stop_transmission <= '1';
    wait for clk_period;
-   --transmit second byte
-   data_in <= "01010101";
-   wait for clk_period;
+   stop_transmission <= '0';
+   
      
-   wait for clk_period*10;
+   wait for clk_period*20;
 end process;
 
 
