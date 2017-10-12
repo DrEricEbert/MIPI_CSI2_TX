@@ -6,8 +6,6 @@ use IEEE.NUMERIC_STD.ALL;
 
 use work.Common.all;
 
---output sync sequence '00011101'
-
 entity transmit_frame is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      clk_lp : in std_logic; --LP clock, ~100 MHZ. not necessarily the same as clk HS
@@ -171,7 +169,7 @@ begin
 					if (dphy_ready_to_transmit_reg = '1') then --HS transmission starts;
 						is_hs_mode <= '1';	    
 						hs_data_valid <= '1';        
-						hs_data_out <=  "00011101";--output sync sequence '00011101'
+						hs_data_out <=  Sync_Sequence;--output sync sequence '00011101'
 						frame_header_byte_next <= first_byte; --none,first_byte,second_byte,third_byte,forth_byte						
 						--state_next <= hs_mode_frame_start;
             	end if;
@@ -188,7 +186,7 @@ begin
 						lp_data_valid <= '0';
 						is_hs_mode <= '1';	    
 						hs_data_valid <= '1';        
-						hs_data_out <=  frame_start_packet_header(15 downto 8); --first byte of packet header;
+						hs_data_out <=  frame_start_packet_header(15 downto 8); --second byte of packet header;
 						frame_header_byte_next <= third_byte; --none,first_byte,second_byte,third_byte,forth_byte
             	end if;
             	
@@ -196,7 +194,7 @@ begin
 						lp_data_valid <= '0';
 						is_hs_mode <= '1';	    
 						hs_data_valid <= '1';        
-						hs_data_out <=  frame_start_packet_header(23 downto 16); --first byte of packet header;
+						hs_data_out <=  frame_start_packet_header(23 downto 16); --third byte of packet header;
 						frame_header_byte_next <= forth_byte; --none,first_byte,second_byte,third_byte,forth_byte
             	end if;
             	
@@ -204,7 +202,7 @@ begin
 						lp_data_valid <= '0';
 						is_hs_mode <= '1';	    
 						hs_data_valid <= '1';        
-						hs_data_out <=  frame_start_packet_header(31 downto 24); --first byte of packet header;
+						hs_data_out <=  frame_start_packet_header(31 downto 24); --forth byte of packet header;
 						--TODO: consider to add additional state for gratefull HS mode termination on
 						-- entering into idle or LP mode before line starts
 						frame_header_byte_next <= none; --none,first_byte,second_byte,third_byte,forth_byte
