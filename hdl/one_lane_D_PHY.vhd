@@ -13,7 +13,7 @@ entity one_lane_D_PHY is generic (
      rst : in  STD_LOGIC;
      start_transmission : in STD_LOGIC; --start of transmit trigger - performs the required LP dance
      stop_transmission  : in STD_LOGIC; --end of transmit trigger, enters into LP CTRL_Stop mode
-     ready_to_transmit : out STD_LOGIC; --goes high once ready for transmission
+     ready_to_transmit : out STD_LOGIC; --goes high once ready for transmission  of HS data
      hs_mode_flag : out STD_LOGIC; --signaling to enter/exit the HS mode. 1- enter, 0- exit. Good for flag of turning on the clock or
                                    -- as a trigger for muxer/switcher. This one goes high configurable number of clock cycles before
                                    -- ready_to_transmit goes high.

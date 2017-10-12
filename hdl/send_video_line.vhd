@@ -102,7 +102,7 @@ transmission_finished <= tr_finished_reg;
 
 --line output state machine
 LINE_OUT_FSMD : process(state_reg,data_in_reg,data_out_valid_reg,start_transmission,video_data_in,
-								data_out_reg,long_packet_header,word_count_reg,crc_reg,word_cound)
+								data_out_reg,long_packet_header,word_count_reg,crc_reg,word_cound,tr_finished_reg)
 begin
 
 	state_next   <= state_reg;
