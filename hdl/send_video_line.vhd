@@ -1,23 +1,5 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 09/21/2017 11:03:54 AM
--- Design Name: 
--- Module Name: send_video_line - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
 
+--TODO: Add Sync_Sequence before get_first_byte state in line 124, update unit test
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -121,7 +103,7 @@ begin
 		   tr_finished_next <= '0';
 		   word_count_next <= (others => '0');
 		   crc_next  <= x"FFFF";
-		   
+--TODO: Add Sync_Sequence before get_first_byte state in line 124, update unit test
 			if (start_transmission = '1') then
 			
 				data_out_valid_next <= '1';
