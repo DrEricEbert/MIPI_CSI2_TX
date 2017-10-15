@@ -136,6 +136,7 @@ begin
                     state_next <= CTRL_Stop;
                     ready_to_transmit_next <= '0';
                     hs_mode_flag_next <= '0';
+                    lp_next <= LP_11;  
                   end if;
             when CTRL_LP_Rqst =>                 
                  state_next <= CTRL_Stop;       

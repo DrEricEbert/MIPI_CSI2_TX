@@ -51,13 +51,12 @@ ARCHITECTURE behavior OF test_transmit_frame IS
          vc_num : IN  std_logic_vector(1 downto 0);
          data_type : IN   packet_type_t; --data type - YUV,RGB,RAW etc    
          frame_data_in : IN  std_logic_vector(7 downto 0);
+      	frame_number : in std_logic_vector(15 downto 0);
          start_frame_transmission : IN  std_logic;
          stop_frame_transmission : IN  std_logic;
          hs_data_out : OUT  std_logic_vector(7 downto 0);
          lp_data_out : OUT  std_logic_vector(1 downto 0);
-         ready_to_send_data : OUT  std_logic;
          hs_data_valid : OUT  std_logic;
-         lp_data_valid : OUT  std_logic;
          is_hs_mode : OUT  std_logic
         );
     END COMPONENT;
@@ -67,20 +66,19 @@ ARCHITECTURE behavior OF test_transmit_frame IS
    signal clk : std_logic := '0';
    signal clk_lp : std_logic := '0';
    signal rst : std_logic := '0';
-   signal bytes_per_line : std_logic_vector(15 downto 0) := (others => '0');
+   signal bytes_per_line : std_logic_vector(15 downto 0) := x"0018"; --24 dec = length of crc_arr1 and crc_arr2 --:= (others => '0');
    signal lines_per_frame : std_logic_vector(15 downto 0) := (others => '0');
    signal vc_num : std_logic_vector(1 downto 0) := (others => '0');
    signal data_type :  packet_type_t := RGB888; --data type - YUV,RGB,RAW etc    
    signal frame_data_in : std_logic_vector(7 downto 0) := (others => '0');
+   signal frame_number : std_logic_vector(15 downto 0) := (others => '1');
    signal start_frame_transmission : std_logic := '0';
    signal stop_frame_transmission : std_logic := '0';
 
  	--Outputs
    signal hs_data_out : std_logic_vector(7 downto 0);
    signal lp_data_out : std_logic_vector(1 downto 0);
-   signal ready_to_send_data : std_logic;
    signal hs_data_valid : std_logic;
-   signal lp_data_valid : std_logic;
    signal is_hs_mode : std_logic;
 
    -- Clock period definitions
@@ -99,13 +97,12 @@ BEGIN
           vc_num => vc_num,
           data_type => data_type,
           frame_data_in => frame_data_in,
+          frame_number => frame_number,
           start_frame_transmission => start_frame_transmission,
           stop_frame_transmission => stop_frame_transmission,
           hs_data_out => hs_data_out,
           lp_data_out => lp_data_out,
-          ready_to_send_data => ready_to_send_data,
           hs_data_valid => hs_data_valid,
-          lp_data_valid => lp_data_valid,
           is_hs_mode => is_hs_mode
         );
 
