@@ -123,7 +123,7 @@ begin
 	 vc_num <= "00"; --using VC 0;
 	 data_type <= RGB888;--RGB888	
 	 start_transmission <= '1';   
-	 wait for clk_period*3;  --let the time to prepare the header!!!
+	 wait for clk_period*4;  --let the time to prepare the header!!!
 	 start_transmission <= '0';  
 	 
    --start to otput the data array

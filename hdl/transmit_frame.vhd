@@ -6,6 +6,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 use work.Common.all;
 
+
+--TODO:MAKE INPUT frame number in line 78
+
 entity transmit_frame is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      clk_lp : in std_logic; --LP clock, ~100 MHZ. not necessarily the same as clk HS

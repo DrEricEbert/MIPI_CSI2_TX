@@ -1,5 +1,4 @@
 
---TODO: Add Sync_Sequence before get_first_byte state in line 124, update unit test
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -39,7 +38,7 @@ end send_video_line;
 architecture Behavioral of send_video_line is
 
 
-type state_type is (idle,get_first_byte,get_second_byte,get_third_byte,transmission_loop,first_byte_of_crc,second_byte_of_crc);
+type state_type is (idle,get_first_byte,get_second_byte,get_third_byte,get_forth_byte,transmission_loop,first_byte_of_crc,second_byte_of_crc);
 signal state_reg, state_next : state_type := idle;
 signal data_out_valid_reg,data_out_valid_next : STD_LOGIC := '0';
 signal tr_finished_reg,tr_finished_next : STD_LOGIC := '0';
@@ -95,7 +94,7 @@ begin
    tr_finished_next <= 	tr_finished_reg;
 	crc_next <= crc_reg;
 			    
-    --idle,get_first_byte,get_second_byte,get_third_byte,get_forth_byte,transmission_loop,prepare_checksum);
+     --idle,get_first_byte,get_second_byte,get_third_byte,get_forth_byte,transmission_loop,first_byte_of_crc,second_byte_of_crc
     case state_reg is 
 	
 		when idle =>
@@ -103,25 +102,29 @@ begin
 		   tr_finished_next <= '0';
 		   word_count_next <= (others => '0');
 		   crc_next  <= x"FFFF";
---TODO: Add Sync_Sequence before get_first_byte state in line 124, update unit test
+		   
 			if (start_transmission = '1') then
 			
 				data_out_valid_next <= '1';
-				data_out_next <= long_packet_header(7 downto 0); --first byte of packet header
+				data_out_next <= Sync_Sequence; --Syncronization byte of packet header,  start of transmission
 				state_next <= get_first_byte;
 			end if;
-               
+			
 		when get_first_byte =>
-
-			data_out_next <= long_packet_header(15 downto 8);			
+			data_out_next <= long_packet_header(7 downto 0); --zero byte of packet header
 			state_next <= get_second_byte;
-                
+				              
 		when get_second_byte =>
 
-			data_out_next <= long_packet_header(23 downto 16);			
-			state_next <= get_third_byte;		
-
+			data_out_next <= long_packet_header(15 downto 8);			
+			state_next <= get_third_byte;
+                
 		when get_third_byte =>
+
+			data_out_next <= long_packet_header(23 downto 16);			
+			state_next <= get_forth_byte;		
+
+		when get_forth_byte =>
 		
 			data_out_next <= long_packet_header(31 downto 24);			
 			data_in_next <= video_data_in;
