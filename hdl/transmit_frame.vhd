@@ -18,8 +18,6 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
  	  frame_data_in : in std_logic_vector(7 downto 0); --one byte of video payload   
  	  frame_number : in std_logic_vector(15 downto 0);
      start_frame_transmission : in std_logic; --triggers LP dance
-     stop_frame_transmission :  in std_logic; --aborts the frame transmission (not sure that this one is neccesary)
-
      hs_data_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
      lp_data_out : out std_logic_vector(1 downto 0); --bit 1 = Dp line, bit 0 = Dn line
      hs_data_valid : out std_logic; --1 when hs_data_out is valid
@@ -28,8 +26,9 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
                                                                         --reading, to give a time for producer to prepare)
      ready_for_data_in_next_cycle : out std_logic; --goest high one clock cycle before ready 
                                                   --to get data                                                                        
-     line_sending_finished : out std_logic --goes high when finished one line transmission, 
+     line_sending_finished : out std_logic; --goes high when finished one line transmission, 
                                             -- hs_data_out is still valid (last byte)                                                 
+     frame_sending_finished : out std_logic --goes high once frame sending is complete                                          
 	 );
 end transmit_frame;
 
@@ -97,14 +96,24 @@ end component;
 
 constant tLowPower : integer := 20; --20 clock cycles of 100 Mhz = 200 ns
 constant tClockStabilize : integer := 24; --8 clock cycles of 100 Mhz = 240 ns
+constant tEndOfHS_TX : integer := 20;--8 clock cycles of 100 Mhz = 240 ns
+constant EnableLineCountingOut : std_logic := '1'; --use zero=0 to disable line counting
+constant DefaultLineNumber : std_logic_vector(15 downto 0) :=  x"0001"; 
 
 type state_type is (idle,lp_mode_frame_start,hs_mode_frame_start_short_packet,hs_mode_frame_start_short_packet_end,
                     delay_between_FS_and_LS,lp_mode_line_start,hs_mode_line_start_short_packet,
                     hs_mode_line_start_short_packet_end,delay_between_LS_and_line_payload,
-                    lp_mode_transmit_line,hs_mode_transmit_line);
+                    lp_mode_transmit_line,hs_mode_transmit_line,
+                    lp_mode_line_stop,hs_mode_line_stop_short_packet,hs_mode_line_stop_short_packet_end,
+                    delay_between_LineStop_and_LineStart_loopback,
+                    lp_mode_frame_end,hs_mode_frame_end_short_packet,
+                    hs_mode_frame_end_short_packet_end,delay_between_frame_end_and_idle
+                    );
+                    
 signal state_reg, state_next : state_type := idle;
 signal reset_conter_reg,reset_conter_next : STD_LOGIC := '0';
 signal counter_value :  STD_LOGIC_VECTOR (COUNTER_WIDTH - 1 downto 0) := (others => '0');
+signal line_number_reg,line_number_next,line_number_out : std_logic_vector(15 downto 0) := DefaultLineNumber;
 
 --related to inst_one_lane_D_PHY
 signal start_dphy_transmission_reg,start_dphy_transmission_next : std_logic := '0';
@@ -177,11 +186,13 @@ begin
 			start_dphy_transmission_reg <= '0';
 			stop_dphy_transmission_reg <= '0';
 			reset_conter_reg <= '1';
+			line_number_reg <= DefaultLineNumber;
 		elsif (clk'event and clk = '1') then 		
 			state_reg <= state_next;  				
 			start_dphy_transmission_reg <= start_dphy_transmission_next;
 			stop_dphy_transmission_reg <= stop_dphy_transmission_next;
 			reset_conter_reg <= reset_conter_next;
+			line_number_reg <= line_number_next;
 		end if;
 						
 end process; --FSMD_state
@@ -190,14 +201,17 @@ end process; --FSMD_state
 lp_data_out <= dphy_lp_out;
 is_hs_mode <= dphy_hs_mode_flag;
 line_sending_finished <= vline_transmission_finished;
+line_number_out <= line_number_reg when (EnableLineCountingOut = '1') else (others => '0');
 
-FRAME_FSMD : process(state_reg,start_frame_transmission,stop_frame_transmission,start_dphy_transmission_reg,
+FRAME_FSMD : process(state_reg,start_frame_transmission,start_dphy_transmission_reg,
                      dphy_ready_to_transmit,dphy_hs_mode_flag,sph_data_out,
                      sph_packet_done_next_cyle,stop_dphy_transmission_reg,vc_num,sph_data_valid,frame_number,
-                     counter_value,lines_per_frame,vline_data_out_valid,vline_csi_out)
+                     counter_value,lines_per_frame,vline_data_out_valid,vline_csi_out,vline_transmission_finished,        
+                     line_number_reg,line_number_out)
 begin
 
 	state_next <= state_reg;
+   line_number_next  <= line_number_reg;
 	start_dphy_transmission_next <=  '0';
 	stop_dphy_transmission_next <= '0';                     
 	hs_data_valid <= '0';
@@ -206,6 +220,7 @@ begin
    sph_packet_to_send <= (others => '0');
    reset_conter_next <= '0'; --no counter reset by default
    vline_start_transmission <= '0';
+   frame_sending_finished <= '0';
    
     case state_reg is 
             when idle =>                 
@@ -262,7 +277,7 @@ begin
            when hs_mode_line_start_short_packet =>
 					if (dphy_ready_to_transmit = '1') then --HS transmission starts;
 						sph_start_sending_packet <= '1';    --activate packet header sender
-						sph_packet_to_send <= get_short_packet(vc_num,Line_Start,lines_per_frame); --should be actual line number
+						sph_packet_to_send <= get_short_packet(vc_num,Line_Start,line_number_out); --should be actual line number or Zero = 0	
 						hs_data_valid <= sph_data_valid;
 						hs_data_out <=  sph_data_out; 
 						state_next <= hs_mode_line_start_short_packet_end;
@@ -300,6 +315,97 @@ begin
           when hs_mode_transmit_line =>
                hs_data_valid <= vline_data_out_valid;
                hs_data_out <=  vline_csi_out;
+               
+               if (vline_transmission_finished = '1') then
+                  reset_conter_next  <= '1';
+                  stop_dphy_transmission_next <= '1';
+               end if;
+               
+               --switching to LP for end of line short packet, inserting some delay
+               if ( (to_integer(unsigned(counter_value)) = tEndOfHS_TX) and (vline_data_out_valid = '0') ) then
+                    start_dphy_transmission_next <= '1';
+                    state_next <= lp_mode_line_stop;
+               end if;
+               
+          when lp_mode_line_stop =>
+               
+               if (dphy_hs_mode_flag = '1') then
+   	           hs_data_valid <= '0';        
+            	  state_next <= hs_mode_line_stop_short_packet;
+            	end if;
+            	
+         when hs_mode_line_stop_short_packet =>
+         		
+         		if (dphy_ready_to_transmit = '1') then --HS transmission starts;
+						sph_start_sending_packet <= '1';    --activate packet header sender
+						sph_packet_to_send <= get_short_packet(vc_num,Line_End,line_number_out); --should be actual line number or Zero = 0				
+						hs_data_valid <= sph_data_valid;
+						hs_data_out <=  sph_data_out; 
+						state_next <= hs_mode_line_stop_short_packet_end;
+            	end if;      
+          
+         when hs_mode_line_stop_short_packet_end =>  
+						hs_data_valid <= sph_data_valid;
+						hs_data_out <=  sph_data_out;
+						
+						if (sph_packet_done_next_cyle = '1') then
+						  state_next <= delay_between_LineStop_and_LineStart_loopback; --delay_between_LS_and_line_payload
+						  stop_dphy_transmission_next <= '1';
+						  reset_conter_next  <= '1'; 
+						end if; 
+						
+		            
+         when delay_between_LineStop_and_LineStart_loopback =>  
+            	  if (to_integer(unsigned(counter_value)) = tLowPower) then
+                    start_dphy_transmission_next <= '1';
+                    reset_conter_next  <= '1';
+                    
+                    if (line_number_reg = lines_per_frame) then  --we finished the frame, just send Frame End short packet
+                      line_number_next <= DefaultLineNumber;
+                      state_next <= lp_mode_frame_end;
+                    else
+                      state_next <= lp_mode_line_start; --loop back if currLineNumber < totalLines
+                      line_number_next <= std_logic_vector(unsigned(line_number_reg) + 1);
+                    end if; 
+                 end if;
+
+--end of frame
+            when lp_mode_frame_end =>
+               
+               if (dphy_hs_mode_flag = '1') then
+   	           hs_data_valid <= '0';        
+            	  state_next <= hs_mode_frame_end_short_packet;
+            	end if;
+            	
+           when hs_mode_frame_end_short_packet =>
+					if (dphy_ready_to_transmit = '1') then --HS transmission starts;
+						sph_start_sending_packet <= '1';    --activate packet header sender
+						sph_packet_to_send <= get_short_packet(vc_num,Frame_End,frame_number);	
+						hs_data_valid <= sph_data_valid;
+						hs_data_out <=  sph_data_out; 
+						state_next <= hs_mode_frame_end_short_packet_end;
+            	end if;            	
+            	
+           
+           when hs_mode_frame_end_short_packet_end => 
+           
+						hs_data_valid <= sph_data_valid;
+						hs_data_out <=  sph_data_out;
+						
+						if (sph_packet_done_next_cyle = '1') then
+						  state_next <= delay_between_frame_end_and_idle; --delay_between_LS_and_line_payload
+						  stop_dphy_transmission_next <= '1';
+						  reset_conter_next  <= '1'; 
+						end if;    
+						
+			 when delay_between_frame_end_and_idle =>        
+            	  if (to_integer(unsigned(counter_value)) = tLowPower) then
+                    --start_dphy_transmission_next <= '1';
+                    state_next <= idle;
+                    reset_conter_next  <= '1';
+                    frame_sending_finished <= '1';
+                 end if;
+                 
           
     end case; --state_reg
 

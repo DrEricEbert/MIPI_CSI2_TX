@@ -53,15 +53,15 @@ ARCHITECTURE behavior OF test_transmit_frame IS
          frame_data_in : IN  std_logic_vector(7 downto 0);
       	frame_number : in std_logic_vector(15 downto 0);
          start_frame_transmission : IN  std_logic;
-         stop_frame_transmission : IN  std_logic;
          hs_data_out : OUT  std_logic_vector(7 downto 0);
          lp_data_out : OUT  std_logic_vector(1 downto 0);
          hs_data_valid : OUT  std_logic;
          is_hs_mode : OUT  std_logic;
          ready_for_data_in_next_cycle : out std_logic; --goest high one clock cycle before ready 
                                                        --to get data
-         line_sending_finished : out std_logic --goes high when finished one line transmission, 
+         line_sending_finished : out std_logic; --goes high when finished one line transmission, 
                                                -- hs_data_out is still valid (last byte)                                                   
+         frame_sending_finished : out std_logic --goes high once frame sending is complete             
         );
     END COMPONENT;
     
@@ -71,13 +71,12 @@ ARCHITECTURE behavior OF test_transmit_frame IS
    signal clk_lp : std_logic := '0';
    signal rst : std_logic := '0';
    signal bytes_per_line : std_logic_vector(15 downto 0) := x"0018"; --24 dec = length of crc_arr1 and crc_arr2 --:= (others => '0');
-   signal lines_per_frame : std_logic_vector(15 downto 0) := (others => '0');
+   signal lines_per_frame : std_logic_vector(15 downto 0) := x"0003"; --(others => '1');
    signal vc_num : std_logic_vector(1 downto 0) := (others => '0');
    signal data_type :  packet_type_t := RGB888; --data type - YUV,RGB,RAW etc    
    signal frame_data_in : std_logic_vector(7 downto 0) := (others => '0');
    signal frame_number : std_logic_vector(15 downto 0) := (others => '1');
    signal start_frame_transmission : std_logic := '0';
-   signal stop_frame_transmission : std_logic := '0';
 
  	--Outputs
    signal hs_data_out : std_logic_vector(7 downto 0);
@@ -86,7 +85,8 @@ ARCHITECTURE behavior OF test_transmit_frame IS
    signal is_hs_mode : std_logic;
    signal ready_for_data_in_next_cycle : std_logic;
    signal line_sending_finished : std_logic;
-
+   signal frame_sending_finished : std_logic;
+   
    -- Clock period definitions
    constant clk_period : time := 10 ns;
    constant clk_lp_period : time := 10 ns;
@@ -105,13 +105,13 @@ BEGIN
           frame_data_in => frame_data_in,
           frame_number => frame_number,
           start_frame_transmission => start_frame_transmission,
-          stop_frame_transmission => stop_frame_transmission,
           hs_data_out => hs_data_out,
           lp_data_out => lp_data_out,
           hs_data_valid => hs_data_valid,
           is_hs_mode => is_hs_mode,
           ready_for_data_in_next_cycle => ready_for_data_in_next_cycle,
-          line_sending_finished => line_sending_finished
+          line_sending_finished => line_sending_finished,
+          frame_sending_finished => frame_sending_finished
         );
 
    -- Clock process definitions
