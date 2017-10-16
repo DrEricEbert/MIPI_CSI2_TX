@@ -31,7 +31,8 @@ COMPONENT send_video_line is
 	 start_transmission : in std_logic; --trigger to start transmission,one clock cycle enough- word_cound,vc_num,video_data_in should be valid.
 	 csi_data_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
 	 transmission_finished : out std_logic; --rised once the header, payload and footer data is sent.
-	 data_out_valid : out std_logic --goes high when csi_data_out is valid	 
+	 data_out_valid : out std_logic; --goes high when csi_data_out is valid	
+	 ready_for_data_in_next_cycle : out std_logic --goest high one clock cycle before ready to get data 
 	 );
 END COMPONENT;
 
@@ -64,7 +65,7 @@ signal start_transmission :  std_logic := '0'; --trigger to start transmission,o
 signal csi_data_out :   std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
 signal transmission_finished :  std_logic; --rised once the header, payload and footer data is sent.
 signal data_out_valid :  std_logic; --goes high when csi_data_out is valid	 
-
+signal ready_for_data_in_next_cycle : std_logic; --goest high one clock cycle before ready to get data
 
 constant clk_period : time := 10 ns; --LP = 100 Mhz
 constant CRC0 : std_logic_vector(15 downto 0) := (others => '1'); --Control mode: Stop
@@ -91,7 +92,8 @@ uut: send_video_line PORT MAP(clk => clk,
 	 start_transmission => start_transmission,
 	 csi_data_out => csi_data_out,
 	 transmission_finished => transmission_finished,
-	 data_out_valid => data_out_valid);
+	 data_out_valid => data_out_valid,
+	 ready_for_data_in_next_cycle =>  ready_for_data_in_next_cycle );
 
 
 -- Clock process definitions
@@ -122,9 +124,17 @@ begin
     word_cound <= x"0018"; --24 dec = length of crc_arr1 and crc_arr2
 	 vc_num <= "00"; --using VC 0;
 	 data_type <= RGB888;--RGB888	
-	 start_transmission <= '1';   
-	 wait for clk_period*4;  --let the time to prepare the header!!!
+	 
+	 --toggle transmission
+	 start_transmission <= '1';
+	 wait for clk_period;   
 	 start_transmission <= '0';  
+	 
+	 --wait until ready
+	 wait until ready_for_data_in_next_cycle = '1';
+	 
+   --wait one clock cycle
+	 wait for clk_period;  
 	 
    --start to otput the data array
    for I in 0 to 23 loop			 

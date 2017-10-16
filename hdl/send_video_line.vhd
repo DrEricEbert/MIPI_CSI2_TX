@@ -31,7 +31,8 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
 	 start_transmission : in std_logic; --trigger to start transmission,one clock cycle enough- word_cound,vc_num,video_data_in should be valid.
 	 csi_data_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
 	 transmission_finished : out std_logic; --rised once the header, payload and footer data is sent,data still valid
-	 data_out_valid : out std_logic --goes high when csi_data_out is valid	 	 
+	 data_out_valid : out std_logic; --goes high when csi_data_out is valid	 	 
+	 ready_for_data_in_next_cycle : out std_logic --goest high one clock cycle before ready to get data
 	 );
 end send_video_line;
 
@@ -93,6 +94,7 @@ begin
 	word_count_next <=  word_count_reg;
    tr_finished_next <= 	tr_finished_reg;
 	crc_next <= crc_reg;
+	ready_for_data_in_next_cycle <= '0'; --default
 			    
      --idle,get_first_byte,get_second_byte,get_third_byte,get_forth_byte,transmission_loop,first_byte_of_crc,second_byte_of_crc
     case state_reg is 
@@ -122,6 +124,7 @@ begin
 		when get_third_byte =>
 
 			data_out_next <= long_packet_header(23 downto 16);			
+			ready_for_data_in_next_cycle  <= '1';
 			state_next <= get_forth_byte;		
 
 		when get_forth_byte =>

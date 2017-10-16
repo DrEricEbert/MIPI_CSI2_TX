@@ -57,7 +57,11 @@ ARCHITECTURE behavior OF test_transmit_frame IS
          hs_data_out : OUT  std_logic_vector(7 downto 0);
          lp_data_out : OUT  std_logic_vector(1 downto 0);
          hs_data_valid : OUT  std_logic;
-         is_hs_mode : OUT  std_logic
+         is_hs_mode : OUT  std_logic;
+         ready_for_data_in_next_cycle : out std_logic; --goest high one clock cycle before ready 
+                                                       --to get data
+         line_sending_finished : out std_logic --goes high when finished one line transmission, 
+                                               -- hs_data_out is still valid (last byte)                                                   
         );
     END COMPONENT;
     
@@ -80,6 +84,8 @@ ARCHITECTURE behavior OF test_transmit_frame IS
    signal lp_data_out : std_logic_vector(1 downto 0);
    signal hs_data_valid : std_logic;
    signal is_hs_mode : std_logic;
+   signal ready_for_data_in_next_cycle : std_logic;
+   signal line_sending_finished : std_logic;
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -103,7 +109,9 @@ BEGIN
           hs_data_out => hs_data_out,
           lp_data_out => lp_data_out,
           hs_data_valid => hs_data_valid,
-          is_hs_mode => is_hs_mode
+          is_hs_mode => is_hs_mode,
+          ready_for_data_in_next_cycle => ready_for_data_in_next_cycle,
+          line_sending_finished => line_sending_finished
         );
 
    -- Clock process definitions

@@ -7,8 +7,6 @@ use IEEE.NUMERIC_STD.ALL;
 use work.Common.all;
 
 
---TODO:MAKE INPUT frame number in line 78
-
 entity transmit_frame is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      clk_lp : in std_logic; --LP clock, ~100 MHZ. not necessarily the same as clk HS
@@ -25,9 +23,13 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      hs_data_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
      lp_data_out : out std_logic_vector(1 downto 0); --bit 1 = Dp line, bit 0 = Dn line
      hs_data_valid : out std_logic; --1 when hs_data_out is valid
-     is_hs_mode :  out std_logic --0 when  in LP mode, 1 when in HS mode. --goes high once ready to accept the HS data
+     is_hs_mode :  out std_logic; --0 when  in LP mode, 1 when in HS mode. --goes high once ready to accept the HS data
                                                                           --(goes 1, N clock cicles before the actual
-                                                                          --reading, to give a time for producer to prepare)
+                                                                        --reading, to give a time for producer to prepare)
+     ready_for_data_in_next_cycle : out std_logic; --goest high one clock cycle before ready 
+                                                  --to get data                                                                        
+     line_sending_finished : out std_logic --goes high when finished one line transmission, 
+                                            -- hs_data_out is still valid (last byte)                                                 
 	 );
 end transmit_frame;
 
@@ -45,7 +47,9 @@ COMPONENT send_video_line is
 	 start_transmission : in std_logic; --trigger to start transmission,one clock cycle enough- word_cound,vc_num,video_data_in should be valid.
 	 csi_data_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
 	 transmission_finished : out std_logic; --rised once the header, payload and footer data is sent.
-	 data_out_valid : out std_logic --goes high when csi_data_out is valid	 
+	 data_out_valid : out std_logic; --goes high when csi_data_out is valid	 
+    ready_for_data_in_next_cycle : out std_logic --goest high one clock cycle before ready 
+                                                  --to get data 
 	 );
 END COMPONENT;
 
@@ -92,6 +96,7 @@ end component;
 
 
 constant tLowPower : integer := 20; --20 clock cycles of 100 Mhz = 200 ns
+constant tClockStabilize : integer := 24; --8 clock cycles of 100 Mhz = 240 ns
 
 type state_type is (idle,lp_mode_frame_start,hs_mode_frame_start_short_packet,hs_mode_frame_start_short_packet_end,
                     delay_between_FS_and_LS,lp_mode_line_start,hs_mode_line_start_short_packet,
@@ -143,7 +148,9 @@ inst_send_video_line: send_video_line PORT MAP(
 	 start_transmission => vline_start_transmission,
 	 csi_data_out => vline_csi_out,
 	 transmission_finished => vline_transmission_finished,
-	 data_out_valid => vline_data_out_valid);  
+	 data_out_valid => vline_data_out_valid,
+	 ready_for_data_in_next_cycle => ready_for_data_in_next_cycle
+	 );  
 	 
 inst_send_packet_header : send_packet_header
     PORT MAP(
@@ -182,6 +189,7 @@ end process; --FSMD_state
 
 lp_data_out <= dphy_lp_out;
 is_hs_mode <= dphy_hs_mode_flag;
+line_sending_finished <= vline_transmission_finished;
 
 FRAME_FSMD : process(state_reg,start_frame_transmission,stop_frame_transmission,start_dphy_transmission_reg,
                      dphy_ready_to_transmit,dphy_hs_mode_flag,sph_data_out,
@@ -276,15 +284,19 @@ begin
             	  if (to_integer(unsigned(counter_value)) = tLowPower) then
                     start_dphy_transmission_next <= '1';
                     state_next <= lp_mode_transmit_line;
+                    reset_conter_next  <= '1';
                  end if;
                  
           when lp_mode_transmit_line =>
             	if (dphy_hs_mode_flag = '1') then
    	           hs_data_valid <= '0';        
-            	  state_next <= hs_mode_transmit_line;    
-            	  vline_start_transmission <= '1';        	              	  
+   	           --delay to allow for clock to stabilize
+   	           if (to_integer(unsigned(counter_value)) = tClockStabilize) then 
+            	    state_next <= hs_mode_transmit_line;    
+            	    vline_start_transmission <= '1';      
+            	  end if;  	              	  
             	end if;
-         --TODO: Add delay to allow for clock to stabilize
+            	
           when hs_mode_transmit_line =>
                hs_data_valid <= vline_data_out_valid;
                hs_data_out <=  vline_csi_out;
