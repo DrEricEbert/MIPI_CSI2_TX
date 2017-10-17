@@ -50,29 +50,22 @@ BEGIN
    -- Clock process definitions
    clk_process :process
    begin
-		clk <= '1';
-		wait for clk_period/2;
 		clk <= '0';
+		wait for clk_period/2;
+		clk <= '1';
 		wait for clk_period/2;
    end process;
    
-      -- Clock process definitions
-   gate_process :process
-   begin
-		gate <= '1';
-		wait for gate_period/2;
-		gate <= '0';
-		wait for gate_period/2;
-   end process;
- 
 
    -- Stimulus process
    stim_proc: process
    begin		
-
-      wait for gate_period*10;
+      gate <= '0';
+      wait for clk_period*10;
+      wait for clk_period/2; --important (sampling on rising edge)
 
       -- insert stimulus here 
+      gate <= '1';
       data_in <= "10011011";
       wait for gate_period;
       data_in <= "01100100";

@@ -28,17 +28,6 @@ signal data_reg,data_next  : std_logic_vector( 7 downto 0) := (others => '0');
 begin
 
 
---  process (clk,gate) begin
---    if (clk'event and clk = '1') then
---      shreg <= '0' & shreg(7 downto 1);     -- shift it left to right
---       if (gate'event and gate = '1' and old_ready='0') then -- rising edge = new data
---        shreg <= data_in;              -- load it
---      end if;
---    end if;
---  end process;
-
---  data_out <= shreg(0);
-
 process (clk) begin
     if (clk'event and clk = '1') then
      state_reg <= state_next;
@@ -47,7 +36,7 @@ process (clk) begin
 end process;
 
 
-HEADER_FSMD : process(state_reg,gate,data_reg,data_in)
+HEADER_FSMD : process(state_reg,gate,data_in,data_reg)
 begin
 
 	state_next <= state_reg;
