@@ -20,23 +20,77 @@ end simple_serializer;
 architecture Behavioral of simple_serializer is
 
 
-signal old_ready : std_logic := '0';
-signal shreg    : std_logic_vector( 7 downto 0);
+type state_type is (idle,b1,b2,b3,b4,b5,b6,b7);
+signal state_reg, state_next : state_type := idle;
+
+signal data_reg,data_next  : std_logic_vector( 7 downto 0) := (others => '0');
 
 begin
 
 
-  process (clk,gate) begin
-    if (clk'event and clk = '1') then
-      shreg <= '0' & shreg(7 downto 1);     -- shift it left to right
-       if (gate'event and gate = '1' and old_ready='0') then -- rising edge = new data
---      if gate='1' and old_ready='0' then -- rising edge = new data
-        shreg <= data_in;              -- load it
-       end if;
-    end if;
-  end process;
+--  process (clk,gate) begin
+--    if (clk'event and clk = '1') then
+--      shreg <= '0' & shreg(7 downto 1);     -- shift it left to right
+--       if (gate'event and gate = '1' and old_ready='0') then -- rising edge = new data
+--        shreg <= data_in;              -- load it
+--      end if;
+--    end if;
+--  end process;
 
-  data_out <= shreg(0);
+--  data_out <= shreg(0);
+
+process (clk) begin
+    if (clk'event and clk = '1') then
+     state_reg <= state_next;
+     data_reg <= data_next;
+    end if;
+end process;
+
+
+HEADER_FSMD : process(state_reg,gate,data_reg,data_in)
+begin
+
+	state_next <= state_reg;
+   data_next <= data_reg;
+	data_out <= '0';
+	   
+    case state_reg is 
+    
+            when idle =>                 
+
+               if (gate = '1') then
+                 	data_out <= data_in(0);
+                 	data_next <= data_in;    
+                 	state_next <= b1;       
+          	   end if; 
+                             
+            when b1 =>
+                 	data_out <= data_in(1);   
+                 	state_next <= b2;  
+            when b2 =>
+                 	data_out <= data_in(2);   
+                 	state_next <= b3;              
+            when b3 =>
+                 	data_out <= data_in(3);   
+                 	state_next <= b4;  
+            when b4 =>
+                 	data_out <= data_in(4);   
+                 	state_next <= b5;  
+            when b5 =>
+                 	data_out <= data_in(5);   
+                 	state_next <= b6;  
+            when b6 =>
+                 	data_out <= data_in(6);   
+                 	state_next <= b7;  
+            when b7 =>
+                 	data_out <= data_in(7);   
+                 	state_next <= idle;                                 	
+    end case; --state_reg
+
+end process; --HEADER_FSMD  
+  
+
+
 
 end Behavioral;
 
