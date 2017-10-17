@@ -89,6 +89,15 @@ ARCHITECTURE behavior OF test_MIPI_TX IS
         );
     END COMPONENT;
     
+    
+    COMPONENT simple_serializer
+    PORT(
+         clk : IN  std_logic;
+         data_in : IN  std_logic_vector(7 downto 0);
+         data_out : OUT  std_logic;
+         gate : IN  std_logic
+        );
+    END COMPONENT;
 
    --Inputs
    signal ref_clock_in : std_logic := '0'; --IDELAY reference clock (nominally 200MHz)
@@ -144,8 +153,8 @@ ARCHITECTURE behavior OF test_MIPI_TX IS
    signal frame_sending_finished : std_logic;
    
    -- Clock period definitions
-   constant clk_period : time := 10 ns;
-   constant clk_lp_period : time := 10 ns;
+   constant clk_period : time := 8 ns;
+   constant clk_lp_period : time := 8 ns;
    constant dphy_clk_period : time := 2 ns; --500 Mhz
    constant ddr_clk_period : time := 1 ns; --1 Ghz  
    constant ref_clock_period : time := 5 ns; --200 Mhz
@@ -201,6 +210,12 @@ BEGIN
           frame_sending_finished => frame_sending_finished
         );
 
+     inst_simple_serializer : simple_serializer PORT MAP (
+          clk => ddr_dphy_clock,
+          data_in => hs_data_out,
+          data_out => hs_dphy_serialized,
+          gate => hs_data_valid
+        );
 
    -- Clock process definitions
    ref_clock_process :process
@@ -221,9 +236,9 @@ BEGIN
    
    ddr_clk_process : process
    begin
-		ddr_dphy_clock <= '0';
-		wait for ddr_clk_period/2;
 		ddr_dphy_clock <= '1';
+		wait for ddr_clk_period/2;
+		ddr_dphy_clock <= '0';
 		wait for ddr_clk_period/2;
    end process;
    
@@ -251,12 +266,20 @@ dphy_d2(0) <= not dphy_d2_se;
 dphy_d3(1) <= dphy_d3_se;
 dphy_d3(0) <= not dphy_d3_se;
 
+
+dphy_d0_se <= hs_dphy_serialized;
+dphy_d1_se <= hs_dphy_serialized;
+dphy_d2_se <= hs_dphy_serialized;
+dphy_d3_se <= hs_dphy_serialized;
+
    -- Stimulus process
    stim_proc: process
    begin		
       -- hold reset state for 100 ns.
       reset <= '1';
-      wait for  ref_clock_period*20;
+      wait for  ddr_clk_period*20;
+   	 wait for  ddr_clk_period/2;
+      
       reset <= '0';
       
       --wait for ref_clock_period*5;
@@ -293,14 +316,15 @@ dphy_d3(0) <= not dphy_d3_se;
    -- Stimulus process
    stim_proc_frame: process
    begin		
-		wait for clk_period*5;
-     
+		wait for  ddr_clk_period*20;
+		      
 		--reset
 	   rst <= '1';
-   	wait for clk_period*5;    
+   	wait for ddr_clk_period*5;    
    	rst <= '0';
    
-   	wait for clk_period*20;
+   	wait for ddr_clk_period*20;
+   	wait for  ddr_clk_period/2;
 
  		--trigger frame transmission 
       start_frame_transmission <= '1';
