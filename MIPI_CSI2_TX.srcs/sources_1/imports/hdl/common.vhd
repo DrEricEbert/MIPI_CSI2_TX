@@ -42,7 +42,7 @@ package Common is
 						   --RAW
 						   RAW6,RAW7,RAW8,RAW10,RAW12,RAW14); --packet types
 
-   constant Sync_Sequence : std_logic_vector(7 downto 0) := "00011101"; --output sync sequence 
+   constant Sync_Sequence : std_logic_vector(7 downto 0) := "10111000";-- My attemp ="00011101"; in Rx ref = 10111000 --output sync sequence 
      -- polynomial: x^16 + x^12 + x^5 + 1
  -- data width: 8
  -- convention: the first serial bit is D[7]

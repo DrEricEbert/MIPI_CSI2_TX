@@ -37,6 +37,13 @@ use work.Common.all;
 ENTITY test_MIPI_TX IS
 END test_MIPI_TX;
  
+-- pixel_clock___148.000__MHz
+-- dvi_bit_clock___740.000__MHz
+--camera_pixel_clock___145.000__MHz
+--camera_mclk____24.399__MHz
+
+--camera_pixel_clock => input_pixel_clock,
+ 
 ARCHITECTURE behavior OF test_MIPI_TX IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
@@ -44,7 +51,7 @@ ARCHITECTURE behavior OF test_MIPI_TX IS
     COMPONENT csi_rx_4lane
     PORT(
          ref_clock_in : IN  std_logic; --IDELAY reference clock (nominally 200MHz)
-         pixel_clock_in : IN  std_logic;
+         pixel_clock_in : IN  std_logic; -- 148 MHz
          byte_clock_out : OUT  std_logic;
          enable : IN  std_logic;
          reset : IN  std_logic;
@@ -152,13 +159,15 @@ ARCHITECTURE behavior OF test_MIPI_TX IS
    signal line_sending_finished : std_logic;
    signal frame_sending_finished : std_logic;
    
+   
+   -- dvi_bit_clock___740.000__MHz
    -- Clock period definitions
    constant clk_period : time := 8 ns;
    constant clk_lp_period : time := 8 ns;
    constant dphy_clk_period : time := 2 ns; --500 Mhz
    constant ddr_clk_period : time := 1 ns; --1 Ghz  
    constant ref_clock_period : time := 5 ns; --200 Mhz
-   constant pixel_clock_period : time := 100 ns; --250 Mhz
+   constant pixel_clock_period : time := 6.75675675 ns;--148 Mhz
    
       --helpers
    signal ddr_dphy_clock : std_logic := '0';  -- ddr clock for serializer, x2 the rate of dphy_clk_se
