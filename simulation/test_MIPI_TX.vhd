@@ -194,7 +194,7 @@ ARCHITECTURE behavior OF test_MIPI_TX IS
    
       --helpers
    signal ddr_dphy_clock : std_logic := '0';  -- ddr clock for serializer, x2 the rate of dphy_clk_se
-   signal hs_dphy_serialized : std_logic := '0'; --serialized stream of HS data
+   signal hs_dphy_lane0,hs_dphy_lane1,hs_dphy_lane2,hs_dphy_lane3 : std_logic := '0'; --serialized stream of HS data
    
 BEGIN
  
@@ -242,12 +242,42 @@ BEGIN
           frame_sending_finished => frame_sending_finished
         );
 
-     inst_simple_serializer : simple_serializer PORT MAP (
+--     inst_simple_serializer : simple_serializer PORT MAP (
+--          clk => ddr_dphy_clock,
+--          data_in => hs_data_out,
+--          data_out => hs_dphy_serialized,
+--          gate => hs_data_valid
+--        );
+        
+     inst_serializer_lane0 : simple_serializer PORT MAP (
           clk => ddr_dphy_clock,
-          data_in => hs_data_out,
-          data_out => hs_dphy_serialized,
-          gate => hs_data_valid
-        );
+          data_in => hs_data_lane0,
+          data_out => hs_dphy_lane0,
+          gate => hs_demuxed_valid
+        );        
+        
+     inst_serializer_lane1 : simple_serializer PORT MAP (
+          clk => ddr_dphy_clock,
+          data_in => hs_data_lane1,
+          data_out => hs_dphy_lane1,
+          gate => hs_demuxed_valid
+        );   
+        
+     inst_serializer_lane2 : simple_serializer PORT MAP (
+          clk => ddr_dphy_clock,
+          data_in => hs_data_lane2,
+          data_out => hs_dphy_lane2,
+          gate => hs_demuxed_valid
+        );   
+        
+     inst_serializer_lane3 : simple_serializer PORT MAP (
+          clk => ddr_dphy_clock,
+          data_in => hs_data_lane3,
+          data_out => hs_dphy_lane3,
+          gate => hs_demuxed_valid
+        );                           
+     
+        
         
      inst_demult_4lanes : demult_4lanes PORT MAP (
           clk => clk,
@@ -311,10 +341,10 @@ dphy_d3(1) <= dphy_d3_se;
 dphy_d3(0) <= not dphy_d3_se;
 
 
-dphy_d0_se <= hs_dphy_serialized;
-dphy_d1_se <= hs_dphy_serialized;
-dphy_d2_se <= hs_dphy_serialized;
-dphy_d3_se <= hs_dphy_serialized;
+dphy_d0_se <= hs_dphy_lane0;
+dphy_d1_se <= hs_dphy_lane1;
+dphy_d2_se <= hs_dphy_lane2;
+dphy_d3_se <= hs_dphy_lane3;
 
    -- Stimulus process
    stim_proc: process

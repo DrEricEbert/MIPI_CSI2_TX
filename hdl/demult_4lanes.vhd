@@ -17,6 +17,8 @@
 -- Additional Comments: 
 --
 ----------------------------------------------------------------------------------
+
+--TODO: BAD,BAD,BAD !!! doen't take into account SoT signal that need to be boradcasted to all 4 lanes!!!
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
