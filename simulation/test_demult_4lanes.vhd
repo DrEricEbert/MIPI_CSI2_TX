@@ -19,6 +19,7 @@ ARCHITECTURE behavior OF test_demult_4lanes IS
          hs_data_in : IN  std_logic_vector(7 downto 0);
          hs_data_valid : IN  std_logic;
          hs_4lanes_clock : OUT  std_logic;
+         hs_demuxed_valid :  out std_logic; -- 1 when demuxed data is valid
          hs_data_lane0 : OUT  std_logic_vector(7 downto 0);
          hs_data_lane1 : OUT  std_logic_vector(7 downto 0);
          hs_data_lane2 : OUT  std_logic_vector(7 downto 0);
@@ -34,6 +35,7 @@ ARCHITECTURE behavior OF test_demult_4lanes IS
 
  	--Outputs
    signal hs_4lanes_clock : std_logic;
+   signal hs_demuxed_valid :  std_logic; -- 1 when demuxed data is valid
    signal hs_data_lane0 : std_logic_vector(7 downto 0);
    signal hs_data_lane1 : std_logic_vector(7 downto 0);
    signal hs_data_lane2 : std_logic_vector(7 downto 0);
@@ -50,6 +52,7 @@ BEGIN
           hs_data_in => hs_data_in,
           hs_data_valid => hs_data_valid,
           hs_4lanes_clock => hs_4lanes_clock,
+          hs_demuxed_valid => hs_demuxed_valid,
           hs_data_lane0 => hs_data_lane0,
           hs_data_lane1 => hs_data_lane1,
           hs_data_lane2 => hs_data_lane2,

@@ -34,6 +34,7 @@ entity demult_4lanes is
 	     hs_data_in      : in  std_logic_vector(7 downto 0); --one byte of CSI stream that comes from frame generator
 	     hs_data_valid   : in  std_logic; --1 when hs_data_out is valid
 	     hs_4lanes_clock : out std_logic; -- clock for demuxed lanes , 1/4 of clk in;
+	     hs_demuxed_valid :  out std_logic; -- 1 when demuxed data is valid
 	     hs_data_lane0   : out std_logic_vector(7 downto 0);
 	     hs_data_lane1   : out std_logic_vector(7 downto 0);
 	     hs_data_lane2   : out std_logic_vector(7 downto 0);
@@ -57,9 +58,10 @@ begin
 	hs_data_lane0 <= all_lanes_old_reg(31 downto 24) when (mux_done_reg = '1') else (others => '0');
 	hs_data_lane1 <= all_lanes_old_reg(23 downto 16) when (mux_done_reg = '1') else (others => '0');
 	hs_data_lane2 <= all_lanes_old_reg(15 downto 8)  when (mux_done_reg = '1') else (others => '0');
-	hs_data_lane3 <= all_lanes_old_reg(7 downto 0)   when (mux_done_reg = '1')  else (others => '0');
+	hs_data_lane3 <= all_lanes_old_reg(7 downto 0)    when (mux_done_reg = '1') else (others => '0');
+	hs_demuxed_valid <= '1' when (mux_done_reg = '1')  else '0';
 
---remove "not" to shift the phase of the clock 180 deg., to be rising edge on data change		
+--remove "not" to shift the phase of the clock 180 deg., to be rising edge synchronous with data change		
     hs_4lanes_clock <= not counter_reg(1); 
 
 	--FSMD state & data registers
@@ -101,9 +103,12 @@ begin
 					all_lanes_next(31 downto 24)  <= hs_data_in;
 					state_next <= byte1;
 				else
+					if (counter_reg = "01") then --change "01" according to "not" in line 65 (hs_4lanes_clock <= not counter_reg(1);) 
 					all_lanes_old_next <=  (others => '0');
 					all_lanes_next  <=  (others => '0');
 					mux_done_next <= '0';
+--					counter_next <= "00";
+					end if;
 				end if;
 
 			when byte1 =>

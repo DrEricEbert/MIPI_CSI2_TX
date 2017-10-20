@@ -105,6 +105,20 @@ ARCHITECTURE behavior OF test_MIPI_TX IS
          gate : IN  std_logic
         );
     END COMPONENT;
+    
+    COMPONENT demult_4lanes
+    PORT(
+         clk : IN  std_logic;   --clock of hs_data_in    
+         hs_data_in : IN  std_logic_vector(7 downto 0);  --one byte of CSI stream that comes from frame generator
+         hs_data_valid : IN  std_logic; --1 when hs_data_out is valid
+         hs_4lanes_clock : OUT  std_logic; -- clock for demuxed lanes , 1/4 of clk in;
+         hs_demuxed_valid :  out std_logic; -- 1 when demuxed data is valid
+         hs_data_lane0 : OUT  std_logic_vector(7 downto 0); --lane0
+         hs_data_lane1 : OUT  std_logic_vector(7 downto 0); --lane1
+         hs_data_lane2 : OUT  std_logic_vector(7 downto 0); --lane2
+         hs_data_lane3 : OUT  std_logic_vector(7 downto 0)  --lane2
+        );
+    END COMPONENT;
 
    --Inputs
    signal ref_clock_in : std_logic := '0'; --IDELAY reference clock (nominally 200MHz)
@@ -169,6 +183,15 @@ ARCHITECTURE behavior OF test_MIPI_TX IS
    constant ref_clock_period : time := 5 ns; --200 Mhz
    constant pixel_clock_period : time := 6.75675675 ns;--148 Mhz
    
+   --demult_4lanes related
+    	--Outputs
+   signal hs_4lanes_clock : std_logic;
+   signal hs_demuxed_valid :  std_logic; -- 1 when demuxed data is valid
+   signal hs_data_lane0 : std_logic_vector(7 downto 0);
+   signal hs_data_lane1 : std_logic_vector(7 downto 0);
+   signal hs_data_lane2 : std_logic_vector(7 downto 0);
+   signal hs_data_lane3 : std_logic_vector(7 downto 0);
+   
       --helpers
    signal ddr_dphy_clock : std_logic := '0';  -- ddr clock for serializer, x2 the rate of dphy_clk_se
    signal hs_dphy_serialized : std_logic := '0'; --serialized stream of HS data
@@ -224,6 +247,18 @@ BEGIN
           data_in => hs_data_out,
           data_out => hs_dphy_serialized,
           gate => hs_data_valid
+        );
+        
+     inst_demult_4lanes : demult_4lanes PORT MAP (
+          clk => clk,
+          hs_data_in => hs_data_out,
+          hs_data_valid => hs_data_valid,
+          hs_4lanes_clock => hs_4lanes_clock,
+          hs_demuxed_valid => hs_demuxed_valid,
+          hs_data_lane0 => hs_data_lane0,
+          hs_data_lane1 => hs_data_lane1,
+          hs_data_lane2 => hs_data_lane2,
+          hs_data_lane3 => hs_data_lane3
         );
 
    -- Clock process definitions
