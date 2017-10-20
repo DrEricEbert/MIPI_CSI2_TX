@@ -36,7 +36,7 @@ entity short_packet is
    Port ( clk : in STD_LOGIC;
           rst : in  STD_LOGIC;
           vc_num : in std_logic_vector(0 to 1); --virtual channel number          
-          packet_type : in shortp_type;          --short packet type
+          packet_type : in packet_type_t;          --short packet type
           packet_data : in std_logic_vector(0 to 15); --packet data: frame number for frame packet, line number for line packet
           short_packet_out : out std_logic_vector(0 to 31) --prepared short packet out
     );
@@ -58,10 +58,10 @@ signal byte_123_tmp : std_logic_vector(0 to 23);
 begin
 
 byte_1_out(0 to 1) <= vc_num;
-byte_1_out(2 to 7) <= Frame_Start_Code(2 to 7) when packet_type = frame_start else
-                      Frame_End_Code(2 to 7) when packet_type = frame_end else
-                      Line_Start_Code(2 to 7) when packet_type = line_start else
-                      Line_End_Code(2 to 7) when packet_type = line_end else
+byte_1_out(2 to 7) <= Frame_Start_Code(2 to 7) when packet_type = Frame_Start else
+                      Frame_End_Code(2 to 7) when packet_type = Frame_End else
+                      Line_Start_Code(2 to 7) when packet_type = Line_Start else
+                      Line_End_Code(2 to 7) when packet_type = Line_End else
                       (others => '0') ;
 byte_2a3_out(0 to 15) <= packet_data;		
 
