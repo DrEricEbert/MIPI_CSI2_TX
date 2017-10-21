@@ -123,7 +123,7 @@ ARCHITECTURE behavior OF test_MIPI_TX_4lanes IS
    signal vc_num : std_logic_vector(1 downto 0) := (others => '0');
    signal data_type :  packet_type_t := RGB888; --data type - YUV,RGB,RAW etc    
    signal frame_data_in : std_logic_vector(31 downto 0) := (others => '0');
-   signal frame_number : std_logic_vector(15 downto 0) := (others => '1');
+   signal frame_number : std_logic_vector(15 downto 0) := (others => '0');
    signal start_frame_transmission : std_logic := '0';
 
  	--Outputs
