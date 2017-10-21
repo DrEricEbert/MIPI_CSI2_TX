@@ -6,8 +6,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 use work.Common.all;
 
---transmits frame in 1 lane
-entity transmit_frame is
+--transmits frame in 4 lane
+entity transmit_frame_4lanes is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      clk_lp : in std_logic; --LP clock, ~100 MHZ. not necessarily the same as clk HS
      rst : in  std_logic;
@@ -18,7 +18,10 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
  	  frame_data_in : in std_logic_vector(7 downto 0); --one byte of video payload   
  	  frame_number : in std_logic_vector(15 downto 0);
      start_frame_transmission : in std_logic; --triggers LP dance
-     hs_data_out : out  std_logic_vector(7 downto 0); --one byte of CSI stream that goes to serializer
+     hs_data_lane0 : out  std_logic_vector(7 downto 0); --lane0 one byte of CSI stream that goes to serializer
+     hs_data_lane1 : out  std_logic_vector(7 downto 0); --lane1 one byte of CSI stream that goes to serializer
+     hs_data_lane2 : out  std_logic_vector(7 downto 0); --lane2 one byte of CSI stream that goes to serializer
+     hs_data_lane3 : out  std_logic_vector(7 downto 0); --lane3 one byte of CSI stream that goes to serializer
      lp_data_out : out std_logic_vector(1 downto 0); --bit 1 = Dp line, bit 0 = Dn line
      hs_data_valid : out std_logic; --1 when hs_data_out is valid
      is_hs_mode :  out std_logic; --0 when  in LP mode, 1 when in HS mode. --goes high once ready to accept the HS data
@@ -30,9 +33,9 @@ Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
                                             -- hs_data_out is still valid (last byte)                                                 
      frame_sending_finished : out std_logic --goes high once frame sending is complete                                          
 	 );
-end transmit_frame;
+end transmit_frame_4lanes;
 
-architecture Behavioral of transmit_frame is
+architecture Behavioral of transmit_frame_4lanes is
 
 -- components
 
