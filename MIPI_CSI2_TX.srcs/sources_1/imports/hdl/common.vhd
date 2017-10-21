@@ -176,9 +176,14 @@ package body Common is
 			byte_123_tmp(23 downto 8)  := byte_2a3_out;
 			byte_4_out                 := get_ecc(byte_123_tmp(23 downto 0));
 
-			short_packet_out(7 downto 0)   := byte_1_out;
+            --wrong MSB
+			--short_packet_out(7 downto 0)   := byte_1_out;
+			--short_packet_out(23 downto 8)  := byte_2a3_out;
+			--short_packet_out(31 downto 24) := byte_4_out;
+			
+			short_packet_out(31 downto 24)   := byte_1_out;
 			short_packet_out(23 downto 8)  := byte_2a3_out;
-			short_packet_out(31 downto 24) := byte_4_out;
+			short_packet_out(7 downto 0) := byte_4_out;
 			
 
 							  
