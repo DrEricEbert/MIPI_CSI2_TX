@@ -12,17 +12,17 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-
+-- NOTE: ASSUMES DATA LENGTH IS MULTIPLY OF 4 !!!
 --Sends entire video line to the serializer
 -- *Assigns entire virtual channel to entire line
 -- *Generates packet header
 ---*generates ECC for packet footer
 ---buffers first 4 bytes of data
-
+-- NOTE: ASSUMES DATA LENGTH IS MULTIPLY OF 4 !!!
 entity send_video_line_4_lanes is
 Port(clk : in std_logic; --data in/out clock HS clock, ~100 MHZ
      rst : in  std_logic;
-	 word_cound : in std_logic_vector(15 downto 0); --length of the valid payload, bytes
+	 word_cound : in std_logic_vector(15 downto 0); --length of the valid payload, bytes, --assumes data length is a multiply of 4
 	 vc_num : in std_logic_vector(1 downto 0); --virtual channel number  
 	 data_type : in packet_type_t; --data type - YUV,RGB,RAW etc
 	 video_data_in : in std_logic_vector(31 downto 0); --4 bytes of video payload
@@ -40,7 +40,7 @@ end send_video_line_4_lanes;
 architecture Behavioral of send_video_line_4_lanes is
 
 
-type state_type is (idle,get_packet_header,transmission_loop,first_byte_of_crc,second_byte_of_crc);
+type state_type is (idle,get_packet_header,transmission_loop,send_crc);
 signal state_reg, state_next : state_type := idle;
 signal data_out_valid_reg,data_out_valid_next : STD_LOGIC := '0';
 signal is_initilized_reg,is_initilized_next  : STD_LOGIC := '0';
@@ -48,7 +48,7 @@ signal tr_finished_reg,tr_finished_next : STD_LOGIC := '0';
 signal data_in_reg,data_in_next : std_logic_vector(31 downto 0) := (others  => '0'); --4 byte also on input
 signal data_out_reg,data_out_next : std_logic_vector(31 downto 0) := (others  => '0');
 signal long_packet_header : std_logic_vector(31 downto 0) := (others  => '0'); --long packet header
-signal word_count_reg,word_count_next : std_logic_vector(15 downto 0); --data counters
+signal word_count_reg,word_count_next : std_logic_vector(13 downto 0) := (others  => '0'); --data counters (13 bit due to assumption that data is multiply of 4)
 signal crc_reg,crc_next:  std_logic_vector(15 downto 0) := x"FFFF";
 signal crc_byte0,crc_byte1,crc_byte2 :  std_logic_vector(15 downto 0);
 
@@ -94,7 +94,7 @@ transmission_finished <= tr_finished_reg;
 --line output state machine
 LINE_OUT_FSMD : process(state_reg,data_in_reg,data_out_valid_reg,start_transmission,video_data_in,
 								data_out_reg,long_packet_header,word_count_reg,crc_reg,word_cound,
-								tr_finished_reg,is_initilized_reg)
+								tr_finished_reg,is_initilized_reg,crc_byte0,crc_byte1,crc_byte2)
 begin
 
 	state_next   <= state_reg;
@@ -106,6 +106,10 @@ begin
 	crc_next <= crc_reg;
 	ready_for_data_in_next_cycle <= '0'; --default
     is_initilized_next <= is_initilized_reg;
+    
+    crc_byte0 <= (others => '0');
+	crc_byte1 <= (others => '0');
+    crc_byte2 <= (others => '0');
 			    
      --idle,get_first_byte,get_second_byte,get_third_byte,get_forth_byte,transmission_loop,first_byte_of_crc,second_byte_of_crc
     case state_reg is 
@@ -116,7 +120,7 @@ begin
 		   word_count_next <= (others => '0');
 		   is_initilized_next <= '0';
 		   crc_next  <= x"FFFF";
-		   
+		   		   
 			if (start_transmission = '1') then
 			
 				data_out_valid_next <= '1';
@@ -136,32 +140,28 @@ begin
 		when transmission_loop =>
 							                     
 			data_out_next <= video_data_in;
-			
-			--crc calculation  crc_byte0,crc_byte1,crc_byte2,crc_byte3
-			--crc_next <= nextCRC16_D8(video_data_in,crc_reg);
-			
+
 			
 			--assumes data length is a multiply of 4
 			crc_byte0 <= nextCRC16_D8(video_data_in(31 downto 24),crc_reg);
 			crc_byte1 <= nextCRC16_D8(video_data_in(23 downto 16),crc_byte0);
 			crc_byte2 <= nextCRC16_D8(video_data_in(15 downto 8),crc_byte1);
-			crc_next <= nextCRC16_D8(video_data_in(7  downto 0),crc_byte2);
+			crc_next <=  nextCRC16_D8(video_data_in(7  downto 0),crc_byte2);
 			
 			word_count_next <= std_logic_vector( unsigned(word_count_reg) + 1 ); --reduces 100 MHz speed on Artix 7
 
 			
-			if (word_count_reg = std_logic_vector( unsigned(word_cound) -1 )) then --finish of transmission
-			   crc_next <= crc_reg; --no more CRC calc. needed
-				state_next <= first_byte_of_crc;   
+			if (word_count_reg = std_logic_vector( unsigned(word_cound(15 downto 2)) -1 )) then --finish of transmission
+			   --crc_next <= crc_reg; --no more CRC calc. needed
+				state_next <= send_crc;   
 			end if;					
 		
-		when	first_byte_of_crc =>
-		  		crc_next <= crc_reg;
-			   data_out_next <= crc_reg(7 downto 0);  --send out first byte of CRC (LSB)
-			   state_next <= second_byte_of_crc;   
-			
-		when second_byte_of_crc =>	
-			   data_out_next <= crc_reg(15  downto 8);  --send out second byte of CRC (MSB)
+		when	send_crc =>
+
+			   data_out_next(31 downto 24) <= crc_reg(7 downto 0);  --send out first byte of CRC (LSB)			
+			   data_out_next(23 downto 16) <= crc_reg(15  downto 8);  --send out second byte of CRC (MSB)
+			   data_out_next(15 downto 0)  <= (others => '0');
+			   
 			   data_out_valid_next <= '1'; 
 			   tr_finished_next <= '1';
 			   crc_next  <= x"FFFF";

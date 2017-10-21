@@ -36,20 +36,6 @@ COMPONENT send_video_line is
 	 );
 END COMPONENT;
 
-COMPONENT csi_rx_packet_handler is
-    Port ( clock : in STD_LOGIC; --word clock in
-           reset : in STD_LOGIC; --asynchronous active high reset
-           enable : in STD_LOGIC; --active high enable
-           data : in STD_LOGIC_VECTOR (31 downto 0); --data in from word aligner
-           data_valid : in STD_LOGIC; --data valid in from word aligner
-           sync_wait : out STD_LOGIC; --drives byte and word aligner wait_for_sync
-           packet_done : out STD_LOGIC; --drives word aligner packet_done
-           payload_out : out STD_LOGIC_VECTOR(31 downto 0); --payload out from long video packets
-           payload_valid : out STD_LOGIC; --whether or not payload output is valid (i.e. currently receiving a long packet)
-           vsync_out : out STD_LOGIC; --vsync output to timing controller
-           in_frame : out STD_LOGIC; --whether or not currently in video frame (i.e. got FS but not FE)
-		   in_line : out STD_LOGIC); --whether or not receiving video line
-END COMPONENT;
 
 --send_video_line
 --Inputs
