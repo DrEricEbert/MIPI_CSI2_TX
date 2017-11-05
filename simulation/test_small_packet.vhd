@@ -94,9 +94,9 @@ uut: csi_rx_packet_handler PORT MAP(
 -- Clock process definitions
 clk_process :process
 begin
-     clk <= '1';
-     wait for clk_period/2;
      clk <= '0';
+     wait for clk_period/2;
+     clk <= '1';
      wait for clk_period/2;
 end process;   
         
@@ -104,8 +104,12 @@ end process;
 -- Stimulus process
 stim_proc: process
 begin        
+	
+	data <= (others => '0');
+   data_valid <= '0';
   
    wait for clk_period*5;
+   wait for clk_period/2;
      
    --reset
    rst <= '1';
@@ -114,26 +118,34 @@ begin
    
    wait for clk_period*5;
    
-   --assign data for test - frame_start
-   data <= get_short_packet("00",frame_start,x"FFFF");
-   
-    wait for clk_period*5;
-   
    --enable 
    enable <= '1';
+   wait for clk_period*20;
+
    
-   wait for clk_period*5;
+   wait for clk_period*20;
    
-   --data valid
    
+   --assign data for test - frame_start
    data_valid <= '1';
+   --wait for clk_period;
+   data <= x"35ABCD00";--get_short_packet("00",frame_start,x"ABCD");
+   wait for clk_period;
+   data <= (others => '0');
+   data_valid <= '0';
+   
    
    wait for clk_period*20;
    
    --assign data for test - line_start
-   data <= get_short_packet("00",line_start,x"FFFF");
+   data_valid <= '1';
+   --wait for clk_period;
+   data <= x"3EABCD02"; --get_short_packet("00",line_start,x"ABCD");  
+   wait for clk_period;
+   data <= (others => '0');
+   data_valid <= '0';
    
-   wait for clk_period*5;
+   wait for clk_period*20;
    
    
 end process;

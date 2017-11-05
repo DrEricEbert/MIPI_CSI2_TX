@@ -266,25 +266,25 @@ BEGIN
    -- Clock process definitions
    ref_clock_process :process
    begin
-		ref_clock_in <= '1';
-		wait for ref_clock_period/2;
 		ref_clock_in <= '0';
+		wait for ref_clock_period/2;
+		ref_clock_in <= '1';
 		wait for ref_clock_period/2;
    end process;
    
    dphy_clock_process :process
    begin
-		dphy_clk_se <= '1';
-		wait for dphy_clk_period/2;
 		dphy_clk_se <= '0';
+		wait for dphy_clk_period/2;
+		dphy_clk_se <= '1';
 		wait for dphy_clk_period/2;
    end process;
    
    ddr_clk_process : process
    begin
-		ddr_dphy_clock <= '1';
-		wait for ddr_clk_period/2;
 		ddr_dphy_clock <= '0';
+		wait for ddr_clk_period/2;
+		ddr_dphy_clock <= '1';
 		wait for ddr_clk_period/2;
    end process;
    
@@ -299,17 +299,17 @@ BEGIN
    -- Clock process definitions
    clk_process :process
    begin
-		clk <= '1';
-		wait for clk_period/2;
 		clk <= '0';
+		wait for clk_period/2;
+		clk <= '1';
 		wait for clk_period/2;
    end process;
  
    clk_lp_process :process
    begin
-		clk_lp <= '1';
-		wait for clk_lp_period/2;
 		clk_lp <= '0';
+		wait for clk_lp_period/2;
+		clk_lp <= '1';
 		wait for clk_lp_period/2;
    end process;
  	
