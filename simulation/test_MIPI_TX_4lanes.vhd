@@ -123,7 +123,7 @@ ARCHITECTURE behavior OF test_MIPI_TX_4lanes IS
    signal vc_num : std_logic_vector(1 downto 0) := (others => '0');
    signal data_type :  packet_type_t := RGB888; --data type - YUV,RGB,RAW etc    
    signal frame_data_in : std_logic_vector(31 downto 0) := (others => '0');
-   signal frame_number : std_logic_vector(15 downto 0) := (others => '0');
+   signal frame_number : std_logic_vector(15 downto 0) := x"ABCD";--(others => '1');
    signal start_frame_transmission : std_logic := '0';
 
  	--Outputs
@@ -266,25 +266,25 @@ BEGIN
    -- Clock process definitions
    ref_clock_process :process
    begin
-		ref_clock_in <= '0';
-		wait for ref_clock_period/2;
 		ref_clock_in <= '1';
+		wait for ref_clock_period/2;
+		ref_clock_in <= '0';
 		wait for ref_clock_period/2;
    end process;
    
    dphy_clock_process :process
    begin
-		dphy_clk_se <= '0';
-		wait for dphy_clk_period/2;
 		dphy_clk_se <= '1';
+		wait for dphy_clk_period/2;
+		dphy_clk_se <= '0';
 		wait for dphy_clk_period/2;
    end process;
    
    ddr_clk_process : process
    begin
-		ddr_dphy_clock <= '0';
-		wait for ddr_clk_period/2;
 		ddr_dphy_clock <= '1';
+		wait for ddr_clk_period/2;
+		ddr_dphy_clock <= '0';
 		wait for ddr_clk_period/2;
    end process;
    
@@ -294,7 +294,25 @@ BEGIN
 		wait for pixel_clock_period/2;
 		--pixel_clock_in <= '1';
 		wait for pixel_clock_period/2;
+	end process;
+	
+   -- Clock process definitions
+   clk_process :process
+   begin
+		clk <= '1';
+		wait for clk_period/2;
+		clk <= '0';
+		wait for clk_period/2;
    end process;
+ 
+   clk_lp_process :process
+   begin
+		clk_lp <= '1';
+		wait for clk_lp_period/2;
+		clk_lp <= '0';
+		wait for clk_lp_period/2;
+   end process;
+ 	
  
 --single-ended to differential 
 dphy_clk(1) <= dphy_clk_se;
@@ -318,48 +336,10 @@ dphy_d1_se <= hs_dphy_lane1;
 dphy_d2_se <= hs_dphy_lane2;
 dphy_d3_se <= hs_dphy_lane3;
 
-
-
-   -- Stimulus process
-   stim_proc: process
-   begin		
-      -- hold reset state for 100 ns.
-      reset <= '1';
-      wait for  ddr_clk_period*20;
-   	 wait for  ddr_clk_period/2;
-      
-      reset <= '0';
-      
-      --wait for ref_clock_period*5;
-      
-      enable <= '1';
-      
-
-      wait for ref_clock_period*10;
-
-      -- insert stimulus here 
-
-      wait;
-   end process;
+reset <= rst;
    
 --***********Frame sending related*********
-   -- Clock process definitions
-   clk_process :process
-   begin
-		clk <= '0';
-		wait for clk_period/2;
-		clk <= '1';
-		wait for clk_period/2;
-   end process;
- 
-   clk_lp_process :process
-   begin
-		clk_lp <= '0';
-		wait for clk_lp_period/2;
-		clk_lp <= '1';
-		wait for clk_lp_period/2;
-   end process;
- 
+
 
    -- Stimulus process
    stim_proc_frame: process
@@ -370,6 +350,7 @@ dphy_d3_se <= hs_dphy_lane3;
 	   rst <= '1';
    	wait for ddr_clk_period*5;    
    	rst <= '0';
+   	enable <= '1';
    
    	wait for ddr_clk_period*20;
    	wait for  ddr_clk_period/2;

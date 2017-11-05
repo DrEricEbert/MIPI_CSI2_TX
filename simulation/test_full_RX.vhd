@@ -128,11 +128,11 @@ ARCHITECTURE behavior OF test_full_RX IS
    signal ddr3_odt : std_logic_vector(0 downto 0);
 
    -- Clock period definitions
-   constant clock_p_period : time := 10 ns;
-   constant clock_n_period : time := 10 ns;
-   constant hdmi_clk_period : time := 10 ns;
-   constant csi0_clk_period : time := 10 ns;
-   constant cam_mclk_period : time := 10 ns;
+   constant clock_p_period : time := 5 ns; --200 MHz
+   constant clock_n_period : time := 5 ns; --200 MHz
+   constant hdmi_clk_period : time := 6.75 ns; --148 Mhz = 6.75 ns
+   constant csi0_clk_period : time := 1.35 ns; --740 Mhz = 1.35 ns
+   constant cam_mclk_period : time := 41 ns; -- 24.399__MHz = 0.000 000 041 sec
  
 BEGIN
  
@@ -209,9 +209,9 @@ csi0_clk(1) <= not csi0_clk(0);
  
    cam_mclk_process :process
    begin
-		cam_mclk <= '0';
+		--cam_mclk <= '0';
 		wait for cam_mclk_period/2;
-		cam_mclk <= '1';
+		--cam_mclk <= '1';
 		wait for cam_mclk_period/2;
    end process;
  

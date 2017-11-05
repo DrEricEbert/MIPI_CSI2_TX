@@ -181,9 +181,15 @@ package body Common is
 			--short_packet_out(23 downto 8)  := byte_2a3_out;
 			--short_packet_out(31 downto 24) := byte_4_out;
 			
+			--another wrong
+			--short_packet_out(31 downto 24)   := byte_1_out;
+			--short_packet_out(23 downto 8)  := byte_2a3_out;
+			--short_packet_out(7 downto 0) := byte_4_out;
+			
 			short_packet_out(31 downto 24)   := byte_1_out;
-			short_packet_out(23 downto 8)  := byte_2a3_out;
-			short_packet_out(7 downto 0) := byte_4_out;
+			short_packet_out(15 downto 8)    := byte_2a3_out(15 downto 8);
+			short_packet_out(23 downto 16)   := byte_2a3_out(7 downto 0);
+			short_packet_out(7 downto 0)     := byte_4_out;
 			
 
 							  
